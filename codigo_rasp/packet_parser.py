@@ -1,7 +1,3 @@
-
-import struct # Libreria muy util para codificar y decodificar datos
-
-
 """
 
 --- Packing en C ---
@@ -38,7 +34,7 @@ void unpack(char * packet) {
         // Handle memory allocation failure
         return;
     }
-    
+
     memcpy(text, packet + 12, largo_text);
     text[largo_text] = '\0'; // Null-terminate the string
 
@@ -46,39 +42,43 @@ void unpack(char * packet) {
     printf("Float Value: %f\n", value_float);
     printf("Text: %s\n", text);
 
-    free(text); 
+    free(text);
 }
 
 
 """
 
+import struct  # Libreria muy util para codificar y decodificar datos
+
 
 def pack(packet_id: int, value_float: float, text: str) -> bytes:
-    largo_text = len(text)
     """
      '<' significa que se codifica en little-endian
      'i' significa que el primer dato es un entero de 4 bytes
      'f' significa que el segundo dato es un float de 4 bytes
      'i' significa que el tercer dato es un entero de 4 bytes
-     '{}s'.format(largo_text) (ej: 10s para un string de largo 10) significa que el string tiene largo variable,
+     '{}s'.format(largo_text) (ej: 10s para un string de largo 10) significa
+     que el string tiene largo variable,
 
-            Documentacion de struct: https://docs.python.org/3/library/struct.html
-
+    Documentacion de struct: https://docs.python.org/3/library/struct.html
     """
-    return struct.pack('<ifi{}s'.format(largo_text), packet_id, value_float, largo_text, text.encode('utf-8'))
+    largo_text = len(text)
+    return struct.pack(f'<ifi{largo_text}s',
+                       packet_id,
+                       value_float,
+                       largo_text,
+                       text.encode('utf-8'))
 
 
 def unpack(packet: bytes) -> list:
-    packet_id,value_float,largo_text = struct.unpack('<ifi', packet[:12])
-    text = struct.unpack('<{}s'.format(largo_text), packet[12:])[0].decode('utf-8')
+    """Desempaqueta en [packet_id, value_float, text]"""
+    packet_id, value_float, largo_text = struct.unpack('<ifi', packet[:12])
+    text = struct.unpack(f'<{largo_text}s', packet[12:])[0] \
+        .decode('utf-8')
     return [packet_id, value_float, text]
-
 
 
 if __name__ == "__main__":
     mensage = pack(1, 3.20, "Hola mundo")
     print(mensage)
     print(unpack(mensage))
-
-
-

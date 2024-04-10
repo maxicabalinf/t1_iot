@@ -18,4 +18,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if data:
                 print("Recibido: ", data.decode('utf-8'))
                 respuesta = "tu mensaje es: " + data.decode('utf-8')
-                conn.sendall(respuesta.encode('utf-8'))  # Envía la respuesta al cliente
+                # Envía la respuesta al cliente
+                conn.sendall(respuesta.encode('utf-8'))
