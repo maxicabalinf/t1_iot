@@ -15,8 +15,8 @@
 
 //Credenciales de WiFi
 
-#define WIFI_SSID "SSID"
-#define WIFI_PASSWORD "PASSOWRD"
+#define WIFI_SSID "raspiiot"
+#define WIFI_PASSWORD "raspiiot"
 #define SERVER_IP     "192.168.0.1" // IP del servidor
 #define SERVER_PORT   1234
 
