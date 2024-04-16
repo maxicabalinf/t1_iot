@@ -9,6 +9,7 @@ services:
       - POSTGRES_NAME=postgres
     volumes:
       - postgres_data_iot:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped # Hace que el contenedor se reinicie a menos que se detenga manualmente 
     ports:
       - 5432:5432 # Puerto de postgres
