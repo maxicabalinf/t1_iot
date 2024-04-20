@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -151,7 +153,40 @@ void socket_tcp(){
     // Cerrar el socket
     close(sock);
 }
+float random_float(float min, float max) {
+    return min + (float)rand() / ((float)RAND_MAX / (max - min));
+}
 
+float* get_acceloremeter_kpi() {
+    float res[8];
+    res[1] = random_float(0.0059, 0.12); //ampx
+    res[2] = random_float(29.0, 31.0); //freqx
+    res[3] = random_float(0.0041, 0.11); //ampy
+    res[4] = random_float(59.0, 61.0); //freqy
+    res[5] = random_float(0.008, 0.15); //ampz
+    res[6] = random_float(89.0, 91.0); //freqz
+    res[0] = (float)sqrt((res[1] * res[1]) + (res[3] * res[3]) + (res[5] * res[5]));  // rms
+    return res;
+}
+
+float* get_thpc_sensor() {
+    // float res[4];
+    // res[1] = random_float() //temp
+    // res[2] = random_float() //press
+    // res[3] = random_float() //hum
+    // res[4] = random_float() //CO
+    // return res
+
+}
+
+uint8_t get_batt_level(){
+    return (uint8_t)rand() % 101;
+}
+
+uint32_t get_timestamp(){
+    time_t t = time(NULL);
+    return (uint32_t)t;
+}
 
 
 void app_main(void){
