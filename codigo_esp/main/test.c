@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -11,16 +11,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "lwip/err.h"
+#include "lwip/sockets.h"  // Para sockets
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-#include "lwip/sockets.h" // Para sockets
 
-//Credenciales de WiFi
+// Credenciales de WiFi
 
 #define WIFI_SSID "raspiiot"
 #define WIFI_PASSWORD "raspiiot"
-#define SERVER_IP     "192.168.0.1" // IP del servidor
-#define SERVER_PORT   1234
+#define SERVER_IP "192.168.0.1"  // IP del servidor
+#define SERVER_PORT 1234
 
 // Variables de WiFi
 #define WIFI_CONNECTED_BIT BIT0
@@ -29,9 +29,8 @@ static const char* TAG = "WIFI";
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
 
-
 void event_handler(void* arg, esp_event_base_t event_base,
-                          int32_t event_id, void* event_data) {
+                   int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT &&
@@ -116,8 +115,7 @@ void nvs_init() {
     ESP_ERROR_CHECK(ret);
 }
 
-
-void socket_tcp(){
+void socket_tcp() {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
@@ -131,7 +129,7 @@ void socket_tcp(){
     }
 
     // Conectar al servidor
-    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
+    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
         ESP_LOGE(TAG, "Error al conectar");
         close(sock);
         return;
@@ -149,7 +147,7 @@ void socket_tcp(){
         return;
     }
     ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
-    
+
     // Cerrar el socket
     close(sock);
 }
@@ -159,13 +157,16 @@ float random_float(float min, float max) {
 
 float* get_acceloremeter_kpi() {
     float res[8];
-    res[1] = random_float(0.0059, 0.12); //ampx
-    res[2] = random_float(29.0, 31.0); //freqx
-    res[3] = random_float(0.0041, 0.11); //ampy
-    res[4] = random_float(59.0, 61.0); //freqy
-    res[5] = random_float(0.008, 0.15); //ampz
-    res[6] = random_float(89.0, 91.0); //freqz
-    res[0] = (float)sqrt((res[1] * res[1]) + (res[3] * res[3]) + (res[5] * res[5]));  // rms
+    res[1] = random_float(0.0059, 0.12);  // ampx
+    res[2] = random_float(29.0, 31.0);    // freqx
+    res[3] = random_float(0.0041, 0.11);  // ampy
+    res[4] = random_float(59.0, 61.0);    // freqy
+    res[5] = random_float(0.008, 0.15);   // ampz
+    res[6] = random_float(89.0, 91.0);    // freqz
+    res[0] = (float)sqrt(
+        (res[1] * res[1]) +
+        (res[3] * res[3]) +
+        (res[5] * res[5]));  // rms
     return res;
 }
 
@@ -176,22 +177,20 @@ float* get_thpc_sensor() {
     // res[3] = random_float() //hum
     // res[4] = random_float() //CO
     // return res
-
 }
 
-uint8_t get_batt_level(){
+uint8_t get_batt_level() {
     return (uint8_t)rand() % 101;
 }
 
-uint32_t get_timestamp(){
+uint32_t get_timestamp() {
     time_t t = time(NULL);
     return (uint32_t)t;
 }
 
-
-void app_main(void){
+void app_main(void) {
     nvs_init();
     wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-    ESP_LOGI(TAG,"Conectado a WiFi!\n");
+    ESP_LOGI(TAG, "Conectado a WiFi!\n");
     socket_tcp();
 }
