@@ -9,7 +9,7 @@ db_config = {
     'port': 5432,
     'user': 'postgres',
     'password': 'postgres',
-    'database': 'db'
+    'database': 'iot_db'
 }
 db = PostgresqlDatabase(**db_config)
 
@@ -23,7 +23,7 @@ class BaseModel(Model):
 class TransportLayer(BaseModel):
     """Representación de los valores de capa de transporte."""
     # TODO: agregar clave primaria
-    id = IntegerField()
+    id = IntegerField(primary_key=True, unique=True)
     name = TextField()
 
 
@@ -85,6 +85,13 @@ class Configuration(BaseModel):
     body_protocol_id = IntegerField()
     transport_layer_id = ForeignKeyField(TransportLayer, to_field='id')
 
+
+db.create_tables([TransportLayer,
+                  Device,
+                  LogEntry,
+                  Datum,
+                  Configuration,
+                  ])
 # Ahora puedes definir tus modelos específicos heredando de BaseBaseModel
 # y db estará conectado al servicio de PostgreSQL cuando realices operaciones de base de datos.
 
