@@ -155,8 +155,7 @@ float random_float(float min, float max) {
     return min + (float)rand() / ((float)RAND_MAX / (max - min));
 }
 
-float* get_acceloremeter_kpi() {
-    float res[8];
+void get_acceloremeter_kpi(float* res) {
     res[1] = random_float(0.0059, 0.12);  // ampx
     res[2] = random_float(29.0, 31.0);    // freqx
     res[3] = random_float(0.0041, 0.11);  // ampy
@@ -167,16 +166,9 @@ float* get_acceloremeter_kpi() {
         (res[1] * res[1]) +
         (res[3] * res[3]) +
         (res[5] * res[5]));  // rms
-    return res;
 }
 
-float* get_thpc_sensor() {
-    // float res[4];
-    // res[1] = random_float() //temp
-    // res[2] = random_float() //press
-    // res[3] = random_float() //hum
-    // res[4] = random_float() //CO
-    // return res
+void get_thpc_sensor() {
 }
 
 uint8_t get_batt_level() {
@@ -189,8 +181,12 @@ uint32_t get_timestamp() {
 }
 
 void app_main(void) {
-    nvs_init();
-    wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-    ESP_LOGI(TAG, "Conectado a WiFi!\n");
-    socket_tcp();
+    //nvs_init();
+    //wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+    //ESP_LOGI(TAG, "Conectado a WiFi!\n");
+    //socket_tcp();
+    float t_data[7];
+    get_acceloremeter_kpi(t_data);
+    printf("%f\t%f\t%f\t%f\t%f\t%f\t%f", t_data[0],t_data[1],t_data[2],t_data[3],t_data[4],t_data[5],t_data[6]);
+
 }
