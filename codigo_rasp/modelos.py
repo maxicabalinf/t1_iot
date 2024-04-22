@@ -1,6 +1,7 @@
 """Definición de modelos de datos."""
 from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
-    TimestampField, ForeignKeyField, TimeField, FloatField
+    TimestampField, ForeignKeyField, TimeField, FloatField, CompositeKey, \
+    BooleanField, Check, SQL
 from playhouse.postgres_ext import ArrayField
 
 # Configuración de la base de datos
@@ -18,36 +19,39 @@ class BaseModel(Model):
     """Definición de un modelo"""
     class Meta:
         database = db
+        legacy_table_names = False
 
 
 class TransportLayer(BaseModel):
     """Representación de los valores de capa de transporte."""
-    # TODO: agregar clave primaria
-    id = IntegerField(primary_key=True, unique=True)
-    name = TextField()
+    id = IntegerField(primary_key=True)
+    name = TextField(unique=True)
 
 
 class Device(BaseModel):
     """Representación de un dispositivo."""
-    # TODO: agregar clave primaria
-    id = IntegerField()
-    mac = TextField()  # TODO: verificar tipo de datos correcto.
+    id = IntegerField(primary_key=True)
+    mac = TextField()
+
+    class Meta:
+        indexes = ((('id', 'mac'), True),)
 
 
 class LogEntry(BaseModel):
     """BaseModelo de datos para los logs."""
-    # TODO: agregar clave primaria
-    device_id = IntegerField()
-    transport_layer_id = ForeignKeyField(TransportLayer, to_field='id')
+    device_id = ForeignKeyField(Device, field='id')
+    transport_layer_id = ForeignKeyField(TransportLayer, field='id')
     timestamp = TimestampField()
+
+    class Meta:
+        primary_key = CompositeKey('device_id', 'timestamp')
 
 
 class Datum(BaseModel):
     """Representación de un dato guardado."""
-    # TODO: agregar clave primaria
-    device_id = ForeignKeyField(Device, to_field='id')
-    device_mac = ForeignKeyField(Device, to_field='mac')
-    save_timestamp = TimestampField()
+    device_id = IntegerField()
+    device_mac = TextField()
+    saved_timestamp = TimestampField()
     delta_time = TimeField()
     packet_loss = IntegerField()
 
@@ -78,22 +82,38 @@ class Datum(BaseModel):
     rgyr_y = ArrayField(FloatField)
     rgyr_z = ArrayField(FloatField)
 
+    class Meta:
+        primary_key = CompositeKey('device_id', 'saved_timestamp')
+        constraints = [
+            SQL('FOREIGN KEY (device_id, device_mac) ' +
+                'REFERENCES device(id, mac)')]
+
 
 class Configuration(BaseModel):
     """Representación de la configuración de comunicación."""
-    # TODO: asegurar única tupla
     body_protocol_id = IntegerField()
-    transport_layer_id = ForeignKeyField(TransportLayer, to_field='id')
+    transport_layer_id = ForeignKeyField(TransportLayer, field='id')
+    one_row_only_uidx = BooleanField(
+        unique=True,
+        default=True,
+        constraints=[Check('one_row_only_uidx = TRUE')])
+
+    class Meta:
+        primary_key = CompositeKey('body_protocol_id', 'transport_layer_id')
 
 
-db.create_tables([TransportLayer,
-                  Device,
-                  LogEntry,
-                  Datum,
-                  Configuration,
-                  ])
-# Ahora puedes definir tus modelos específicos heredando de BaseBaseModel
-# y db estará conectado al servicio de PostgreSQL cuando realices operaciones de base de datos.
+# Crea y llena tablas si no existen
+if len(db.get_tables()) == 0:
+    Device.create_table()
+    db.create_tables([
+        TransportLayer,
+        LogEntry,
+        Datum,
+        Configuration,
+    ], safe=True)
 
+    # Llena con valores iniciales
+    TransportLayer.create(id=0, name='TCP')
+    TransportLayer.create(id=1, name='UDP')
 
-# Ver la documentación de peewee para más información, es super parecido a Django
+    Configuration.create(body_protocol_id=0, transport_layer_id=0)
