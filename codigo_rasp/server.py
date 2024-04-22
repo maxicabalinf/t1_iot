@@ -25,13 +25,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 import jsockets
 import sys
 from modelos import Configuration
+from peewee import DoesNotExist
 
 
 def get_cfg():
     """Extrae la configuración de la base de datos"""
-    # data_list = []
-    # cfg = Configuration.select()[0]
-    return cfg
+    try:
+        return Configuration.get()
+    except DoesNotExist:
+        return None
 
 
 print(get_cfg())
