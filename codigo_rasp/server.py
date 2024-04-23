@@ -21,9 +21,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 conn.sendall(respuesta.encode('utf-8'))
 """
 
-# import socket
-import jsockets
+import socket
 import sys
+import jsockets
 from modelos import Configuration
 from peewee import DoesNotExist
 
@@ -55,29 +55,6 @@ def build_headers(id_msg, mac, transport_layer, id_protocol, length):
 
 # HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
-
-s = jsockets.socket_tcp_bind(PORT)  # Abre socket y queda a la escucha
-if s is None:
-    print('could not open socket')
-    sys.exit(1)
-
-# Esperando un mensaje con TCP
-while True:
-    # Acepta una conexión de ESP
-    conn, addr = s.accept()
-    print('Connected by', addr)
-    header_ini = conn.recv(1024)
-    # Consultar la tabla de configuración en la base de datos
-    cfg = get_cfg()
-    response_header = """"""
-    conn.send(response_header)
-    while True:
-        data = conn.recv(1024)
-        if not data:
-            break
-        conn.send(data)
-    # conn.close()
-    # print('Client disconnected')
 
 
 def send_headers(sock):
@@ -115,3 +92,29 @@ send_headers(sock)
 # y el servidor escribió los datos en la tabla Datos.
 
 # Finalmente se reinicia el ciclo.
+
+
+# Esperando un mensaje con TCP
+if __name__ == '__main__':
+    # Abre socket y queda a la escucha
+    s = jsockets.socket_tcp_bind(PORT)
+    if s is None:
+        print('could not open socket')
+        sys.exit(1)
+
+    while True:
+        # Acepta una conexión de ESP
+        conn, addr = s.accept()
+        print('Connected by', addr)
+        header_ini = conn.recv(1024)
+        # Consultar la tabla de configuración en la base de datos
+        cfg = get_cfg()
+        response_header = """"""
+        conn.send(response_header)
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            conn.send(data)
+        # conn.close()
+        # print('Client disconnected')
