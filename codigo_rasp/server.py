@@ -25,28 +25,28 @@ import socket
 import sys
 import jsockets
 from modelos import Configuration
-from peewee import DoesNotExist
 
 
 def get_cfg():
     """Extrae la configuración de la base de datos"""
-    try:
-        return Configuration.get()
-    except DoesNotExist:
-        return None
-
-
-print(get_cfg())
+    cfg = Configuration.select(
+        Configuration.body_protocol_id,
+        Configuration.transport_layer_id
+    ).dicts()
+    if len(cfg) == 0:
+        raise Exception
+    return cfg[0]
 
 
 def build_headers(id_msg, mac, transport_layer, id_protocol, length):
     """Retorna el header de un mensaje"""
+    assert (len(mac) == 12)
     bytes_list = [
-        id_msg.to_bytes(2),
-        mac.to_bytes(6),
-        transport_layer.to_bytes(1),
-        id_protocol.to_bytes(1),
-        length.to_bytes(2),
+        id_msg.to_bytes(2, byteorder='big'),
+        bytearray.fromhex(mac),
+        transport_layer.to_bytes(1, byteorder='big'),
+        id_protocol.to_bytes(1, byteorder='big'),
+        length.to_bytes(2, byteorder='big'),
     ]
 
     header = b''.join(bytes_list)
