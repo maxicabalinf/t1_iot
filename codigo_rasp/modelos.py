@@ -84,9 +84,8 @@ class Datum(BaseModel):
 
     class Meta:
         primary_key = CompositeKey('device_id', 'saved_timestamp')
-        constraints = [
-            SQL('FOREIGN KEY (device_id, device_mac) ' +
-                'REFERENCES device(id, mac)')]
+        constraints = [SQL('FOREIGN KEY (device_id, device_mac) ' +
+                           'REFERENCES device(id, mac)')]
 
 
 class Configuration(BaseModel):
@@ -102,18 +101,34 @@ class Configuration(BaseModel):
         primary_key = CompositeKey('body_protocol_id', 'transport_layer_id')
 
 
+MODELS = (
+    Device,
+    TransportLayer,
+    LogEntry,
+    Datum,
+    Configuration,
+)
+
+
+def initialize_tables(database):
+    """Inicializa las tablas del modelo de datos."""
+    if len(database.get_tables()) == 0:
+        database.create_tables([
+            Device
+        ], safe=True)
+        database.create_tables([
+            TransportLayer,
+            LogEntry,
+            Datum,
+            Configuration,
+        ], safe=True)
+
+        # Llena con valores iniciales
+        TransportLayer.create(id=0, name='TCP')
+        TransportLayer.create(id=1, name='UDP')
+
+        Configuration.create(body_protocol_id=0, transport_layer_id=0)
+
+
 # Crea y llena tablas si no existen
-if len(db.get_tables()) == 0:
-    Device.create_table()
-    db.create_tables([
-        TransportLayer,
-        LogEntry,
-        Datum,
-        Configuration,
-    ], safe=True)
-
-    # Llena con valores iniciales
-    TransportLayer.create(id=0, name='TCP')
-    TransportLayer.create(id=1, name='UDP')
-
-    Configuration.create(body_protocol_id=0, transport_layer_id=0)
+initialize_tables(db)
