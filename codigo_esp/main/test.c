@@ -175,8 +175,8 @@ char* get_header(char transport_layer, char protocol_id) {
             length = 55;
         case 4:
             length = 48027;
-            memcpy((void*)&(head[10]), (void*)&length, 2);
     }
+    memcpy((void*)&(head[10]), (void*)&length, 2);
     return header;
 }
 
