@@ -265,7 +265,48 @@ char* get_data_protocol_3(){
     free(acc_kpi);
     return data;
 }
-
+float* get_acc(){
+    float* acc_data = malloc(2000*sizeof(float));
+    for (int i = 0; i < 2000; i++){
+        acc_data[i] = random_float(-16.0,16.0);
+    }
+    return acc_data
+}
+float* get_rgyr(){
+    float* rgyr_data = malloc(2000*sizeof(float));
+    for (int i = 0; i < 2000; i++){
+        acc_data[i] = random_float(-1000.0,1000.0);
+    }
+    return rgyr_data;
+}
+char* get_data_protocol_4(){
+    char* data = malloc(48015);
+    data[0] = get_batt_level();
+    uint32_t timestamp = get_timestamp();
+    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    char* thcp_data = get_thpc_data();
+    memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
+    free(thcp_data);
+    float* get_acc_x = get_acc();
+    float* get_acc_y = get_acc();
+    float* get_acc_z = get_acc();
+    memcpy((void*) &(data[15]), (void*) &acc_kpi, 8000);
+    memcpy((void*) &(data[8015]), (void*) &acc_kpi, 8000);
+    memcpy((void*) &(data[16015]), (void*) &acc_kpi, 8000);
+    free(get_acc_x);
+    free(get_acc_y);
+    free(get_acc_z);
+    float* get_rgyr_x = get_rgyr();
+    float* get_rgyr_y = get_rgyr();
+    float* get_rgyr_z = get_rgyr();
+    memcpy((void*) &(data[24015]), (void*) &acc_kpi, 8000);
+    memcpy((void*) &(data[32015]), (void*) &acc_kpi, 8000);
+    memcpy((void*) &(data[40015]), (void*) &acc_kpi, 8000);
+    free(get_rgyr_x);
+    free(get_rgyr_y);
+    free(get_rgyr_z);
+    return data;
+}
 void app_main(void) {
     //nvs_init();
     //wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
