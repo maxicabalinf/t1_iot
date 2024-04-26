@@ -155,29 +155,29 @@ void socket_tcp() {
 // Empaquetado de datos
 //--------------------------------------------------------------------//
 
-char* get_headers(char t_l, char protocol){
-  char* header = malloc(12);
-  int n = 65535;
-  int id = rand() % (n + 1); //2 bytes
-  memcpy((void*) header, (void*) &id, 2);
-  ///no se como leer la mac adress //6 bytes
-  header[8] = t_l; // 1 byte
-  header[9] = protocol // 1 byte
-  unsigned short length;
-  switch (protocol){
-    case 0:
-       length = 13;
-    case 1:
-       length = 17;
-    case 2:
-       length = 27;
-    case 3:
-       length = 55;
-    case 4:
-       length = 48027;
-    memcpy((void*) &(head[10]), (void*) &length, 2);
-  }
-  return header;
+char* get_headers(char t_l, char protocol) {
+    char* header = malloc(12);
+    int n = 65535;
+    int id = rand() % (n + 1);  // 2 bytes
+    memcpy((void*)header, (void*)&id, 2);
+    /// no se como leer la mac adress //6 bytes
+    header[8] = t_l;      // 1 byte
+    header[9] = protocol  // 1 byte
+        unsigned short length;
+    switch (protocol) {
+        case 0:
+            length = 13;
+        case 1:
+            length = 17;
+        case 2:
+            length = 27;
+        case 3:
+            length = 55;
+        case 4:
+            length = 48027;
+            memcpy((void*)&(head[10]), (void*)&length, 2);
+    }
+    return header;
 }
 
 float random_float(float min, float max) {
@@ -185,38 +185,35 @@ float random_float(float min, float max) {
 }
 
 float* get_acceloremeter_kpi() {
-    float* acc_kpi_data= malloc(28);
+    float* acc_kpi_data = malloc(28);
     float ampx = random_float(0.0059, 0.12);  // ampx
-    memcpy((void*) &(acc_kpi_data[4]), (void*) &ampx, 4);
-    float freqx = random_float(29.0, 31.0);    // freqx
-    memcpy((void*) &(acc_kpi_data[8]), (void*) &freqx, 4);
+    memcpy((void*)&(acc_kpi_data[4]), (void*)&ampx, 4);
+    float freqx = random_float(29.0, 31.0);  // freqx
+    memcpy((void*)&(acc_kpi_data[8]), (void*)&freqx, 4);
     float ampy = random_float(0.0041, 0.11);  // ampy
-    memcpy((void*) &(acc_kpi_data[12]), (void*) &ampy, 4);
-    float freqy = random_float(59.0, 61.0);    // freqy
-    memcpy((void*) &(acc_kpi_data[16]), (void*) &freqy, 4);
-    float ampz = random_float(0.008, 0.15);   // ampz
-    memcpy((void*) &(acc_kpi_data[20]), (void*) &ampz, 4);
-    float freqz = random_float(89.0, 91.0);    // freqz
-    memcpy((void*) &(acc_kpi_data[24]), (void*) &freqz, 4);
+    memcpy((void*)&(acc_kpi_data[12]), (void*)&ampy, 4);
+    float freqy = random_float(59.0, 61.0);  // freqy
+    memcpy((void*)&(acc_kpi_data[16]), (void*)&freqy, 4);
+    float ampz = random_float(0.008, 0.15);  // ampz
+    memcpy((void*)&(acc_kpi_data[20]), (void*)&ampz, 4);
+    float freqz = random_float(89.0, 91.0);  // freqz
+    memcpy((void*)&(acc_kpi_data[24]), (void*)&freqz, 4);
     float rms = (float)sqrt(
         (ampx * ampx) +
         (ampy * ampy) +
         (ampz * ampz));  // rms
-    memcpy((void*) &(acc_kpi_data[0]), (void*) &rms, 4);
+    memcpy((void*)&(acc_kpi_data[0]), (void*)&rms, 4);
     return acc_kpi_data;
-    
 }
-
-
 
 char* get_thpc_data() {
     char* data_thpc = malloc(10);
-    data_thpc[0] = (char) 5 + (rand() % 26); //temperatura 1 byte
-    long pres = 1000 + (rand() % 201); // presion 4 bytes
-    memcpy((void*) &(data_thpc[1]), (void*) &pres, 4);
-    data_thpc[5] = (char) random_float(30.0,80.0); // humedad 1 byte
-    float co = random_float(30.0,200.0); // co 4 bytes
-    memcpy((void*) &(data_thpc[6]), (void*) &co, 4); 
+    data_thpc[0] = (char)5 + (rand() % 26);  // temperatura 1 byte
+    long pres = 1000 + (rand() % 201);       // presion 4 bytes
+    memcpy((void*)&(data_thpc[1]), (void*)&pres, 4);
+    data_thpc[5] = (char)random_float(30.0, 80.0);  // humedad 1 byte
+    float co = random_float(30.0, 200.0);           // co 4 bytes
+    memcpy((void*)&(data_thpc[6]), (void*)&co, 4);
     return data_thpc;
 }
 
@@ -225,95 +222,94 @@ uint8_t get_batt_level() {
 }
 
 uint32_t get_timestamp() {
-    time_t t = time(NULL); //preguntarrrrr
+    time_t t = time(NULL);  // preguntarrrrr
     return (uint32_t)t;
 }
 
-char* get_data_protocol_0(){
+char* get_data_protocol_0() {
     char* data = malloc(1);
     data[0] = get_batt_level();
     return data;
 }
-char* get_data_protocol_1(){
+char* get_data_protocol_1() {
     char* data = malloc(5);
     data[0] = get_batt_level();
     uint32_t timestamp = get_timestamp();
-    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
     return data;
 }
-char* get_data_protocol_2(){
+char* get_data_protocol_2() {
     char* data = malloc(15);
     data[0] = get_batt_level();
     uint32_t timestamp = get_timestamp();
-    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
     char* thcp_data = get_thpc_data();
-    memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
+    memcpy((void*)&(data[5]), (void*)&thcp_data, 10);
     free(thcp_data);
     return data;
 }
 
-char* get_data_protocol_3(){
+char* get_data_protocol_3() {
     char* data = malloc(43);
     data[0] = get_batt_level();
     uint32_t timestamp = get_timestamp();
-    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
     char* thcp_data = get_thpc_data();
-    memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
+    memcpy((void*)&(data[5]), (void*)&thcp_data, 10);
     free(thcp_data);
     float* acc_kpi = get_acceloremeter_kpi();
-    memcpy((void*) &(data[15]), (void*) &acc_kpi, 28);
+    memcpy((void*)&(data[15]), (void*)&acc_kpi, 28);
     free(acc_kpi);
     return data;
 }
-float* get_acc(){
-    float* acc_data = malloc(2000*sizeof(float));
-    for (int i = 0; i < 2000; i++){
-        acc_data[i] = random_float(-16.0,16.0);
+float* get_acc() {
+    float* acc_data = malloc(2000 * sizeof(float));
+    for (int i = 0; i < 2000; i++) {
+        acc_data[i] = random_float(-16.0, 16.0);
     }
     return acc_data
 }
-float* get_rgyr(){
-    float* rgyr_data = malloc(2000*sizeof(float));
-    for (int i = 0; i < 2000; i++){
-        acc_data[i] = random_float(-1000.0,1000.0);
+float* get_rgyr() {
+    float* rgyr_data = malloc(2000 * sizeof(float));
+    for (int i = 0; i < 2000; i++) {
+        acc_data[i] = random_float(-1000.0, 1000.0);
     }
     return rgyr_data;
 }
-char* get_data_protocol_4(){
+char* get_data_protocol_4() {
     char* data = malloc(48015);
     data[0] = get_batt_level();
     uint32_t timestamp = get_timestamp();
-    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
     char* thcp_data = get_thpc_data();
-    memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
+    memcpy((void*)&(data[5]), (void*)&thcp_data, 10);
     free(thcp_data);
     float* get_acc_x = get_acc();
     float* get_acc_y = get_acc();
     float* get_acc_z = get_acc();
-    memcpy((void*) &(data[15]), (void*) &acc_kpi, 8000);
-    memcpy((void*) &(data[8015]), (void*) &acc_kpi, 8000);
-    memcpy((void*) &(data[16015]), (void*) &acc_kpi, 8000);
+    memcpy((void*)&(data[15]), (void*)&acc_kpi, 8000);
+    memcpy((void*)&(data[8015]), (void*)&acc_kpi, 8000);
+    memcpy((void*)&(data[16015]), (void*)&acc_kpi, 8000);
     free(get_acc_x);
     free(get_acc_y);
     free(get_acc_z);
     float* get_rgyr_x = get_rgyr();
     float* get_rgyr_y = get_rgyr();
     float* get_rgyr_z = get_rgyr();
-    memcpy((void*) &(data[24015]), (void*) &acc_kpi, 8000);
-    memcpy((void*) &(data[32015]), (void*) &acc_kpi, 8000);
-    memcpy((void*) &(data[40015]), (void*) &acc_kpi, 8000);
+    memcpy((void*)&(data[24015]), (void*)&acc_kpi, 8000);
+    memcpy((void*)&(data[32015]), (void*)&acc_kpi, 8000);
+    memcpy((void*)&(data[40015]), (void*)&acc_kpi, 8000);
     free(get_rgyr_x);
     free(get_rgyr_y);
     free(get_rgyr_z);
     return data;
 }
 void app_main(void) {
-    //nvs_init();
-    //wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-    //ESP_LOGI(TAG, "Conectado a WiFi!\n");
-    //socket_tcp();
+    // nvs_init();
+    // wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+    // ESP_LOGI(TAG, "Conectado a WiFi!\n");
+    // socket_tcp();
     float t_data[7];
     get_acceloremeter_kpi(t_data);
-    printf("%f\t%f\t%f\t%f\t%f\t%f\t%f", t_data[0],t_data[1],t_data[2],t_data[3],t_data[4],t_data[5],t_data[6]);
-
+    printf("%f\t%f\t%f\t%f\t%f\t%f\t%f", t_data[0], t_data[1], t_data[2], t_data[3], t_data[4], t_data[5], t_data[6]);
 }
