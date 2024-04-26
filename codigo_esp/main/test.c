@@ -151,6 +151,35 @@ void socket_tcp() {
     // Cerrar el socket
     close(sock);
 }
+//--------------------------------------------------------------------//
+// Empaquetado de datos
+//--------------------------------------------------------------------//
+
+char* get_headers(char t_l, char protocol){
+  char* header = malloc(12);
+  int n = 65535;
+  int id = rand() % (n + 1); //2 bytes
+  memcpy((void*) header, (void*) &id, 2);
+  ///no se como leer la mac adress //6 bytes
+  header[8] = t_l; // 1 byte
+  header[9] = protocol // 1 byte
+  unsigned short length;
+  switch (protocol){
+    case 0:
+       length = 13;
+    case 1:
+       length = 17;
+    case 2:
+       length = 27;
+    case 3:
+       length = 55;
+    case 4:
+       length = 48027;
+    memcpy((void*) &(head[10]), (void*) &length, 2);
+  }
+  return header;
+}
+
 float random_float(float min, float max) {
     return min + (float)rand() / ((float)RAND_MAX / (max - min));
 }
@@ -168,7 +197,17 @@ void get_acceloremeter_kpi(float* res) {
         (res[5] * res[5]));  // rms
 }
 
-void get_thpc_sensor() {
+
+
+char* get_thpc_data() {
+    char* data_thpc = malloc(10);
+    data_thpc[0] = (char) 5 + (rand() % 26); //temperatura 1 byte
+    long pres = 1000 + (rand() % 201); // presion 4 bytes
+    memcpy((void*) &(data_thpc[1]), (void*) &pres, 4);
+    data_thpc[5] = (char) random_float(30.0,80.0); // humedad 1 byte
+    float co = random_float(30.0,200.0); // co 4 bytes
+    memcpy((void*) &(data_thpc[6]), (void*) &co, 4); 
+    return data_thpc;
 }
 
 uint8_t get_batt_level() {
@@ -176,8 +215,31 @@ uint8_t get_batt_level() {
 }
 
 uint32_t get_timestamp() {
-    time_t t = time(NULL);
+    time_t t = time(NULL); //preguntarrrrr
     return (uint32_t)t;
+}
+
+char* get_data_protocol_0(){
+    char* data = malloc(1);
+    data[0] = get_batt_level();
+    return data;
+}
+char* get_data_protocol_1(){
+    char* data = malloc(5);
+    data[0] = get_batt_level();
+    uint32_t timestamp = get_timestamp();
+    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    return data;
+}
+char* get_data_protocol_2(){
+    char* data = malloc(15);
+    data[0] = get_batt_level();
+    uint32_t timestamp = get_timestamp();
+    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    char* thcp_data = get_thpc_data();
+    memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
+    free(thcp_data);
+    return data;
 }
 
 void app_main(void) {
