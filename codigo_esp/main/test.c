@@ -155,16 +155,16 @@ void socket_tcp() {
 // Empaquetado de datos
 //--------------------------------------------------------------------//
 
-char* get_headers(char t_l, char protocol) {
+char* get_header(char transport_layer, char protocol_id) {
     char* header = malloc(12);
     int n = 65535;
-    int id = rand() % (n + 1);  // 2 bytes
-    memcpy((void*)header, (void*)&id, 2);
+    int msg_id = rand() % (n + 1);  // 2 bytes
+    memcpy((void*)header, (void*)&msg_id, 2);
     /// no se como leer la mac adress //6 bytes
-    header[8] = t_l;      // 1 byte
-    header[9] = protocol  // 1 byte
+    header[8] = transport_layer;  // 1 byte
+    header[9] = protocol_id       // 1 byte
         unsigned short length;
-    switch (protocol) {
+    switch (protocol_id) {
         case 0:
             length = 13;
         case 1:
