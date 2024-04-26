@@ -162,8 +162,8 @@ char* get_header(char transport_layer, char protocol_id) {
     memcpy((void*)header, (void*)&msg_id, 2);
     /// no se como leer la mac adress //6 bytes
     header[8] = transport_layer;  // 1 byte
-    header[9] = protocol_id       // 1 byte
-        unsigned short length;
+    header[9] = protocol_id;      // 1 byte
+    unsigned short length;
     switch (protocol_id) {
         case 0:
             length = 13;
