@@ -184,17 +184,27 @@ float random_float(float min, float max) {
     return min + (float)rand() / ((float)RAND_MAX / (max - min));
 }
 
-void get_acceloremeter_kpi(float* res) {
-    res[1] = random_float(0.0059, 0.12);  // ampx
-    res[2] = random_float(29.0, 31.0);    // freqx
-    res[3] = random_float(0.0041, 0.11);  // ampy
-    res[4] = random_float(59.0, 61.0);    // freqy
-    res[5] = random_float(0.008, 0.15);   // ampz
-    res[6] = random_float(89.0, 91.0);    // freqz
-    res[0] = (float)sqrt(
-        (res[1] * res[1]) +
-        (res[3] * res[3]) +
-        (res[5] * res[5]));  // rms
+float* get_acceloremeter_kpi() {
+    float* acc_kpi_data= malloc(28);
+    float ampx = random_float(0.0059, 0.12);  // ampx
+    memcpy((void*) &(acc_kpi_data[4]), (void*) &ampx, 4);
+    float freqx = random_float(29.0, 31.0);    // freqx
+    memcpy((void*) &(acc_kpi_data[8]), (void*) &freqx, 4);
+    float ampy = random_float(0.0041, 0.11);  // ampy
+    memcpy((void*) &(acc_kpi_data[12]), (void*) &ampy, 4);
+    float freqy = random_float(59.0, 61.0);    // freqy
+    memcpy((void*) &(acc_kpi_data[16]), (void*) &freqy, 4);
+    float ampz = random_float(0.008, 0.15);   // ampz
+    memcpy((void*) &(acc_kpi_data[20]), (void*) &ampz, 4);
+    float freqz = random_float(89.0, 91.0);    // freqz
+    memcpy((void*) &(acc_kpi_data[24]), (void*) &freqz, 4);
+    float rms = (float)sqrt(
+        (ampx * ampx) +
+        (ampy * ampy) +
+        (ampz * ampz));  // rms
+    memcpy((void*) &(acc_kpi_data[0]), (void*) &rms, 4);
+    return acc_kpi_data;
+    
 }
 
 
@@ -239,6 +249,20 @@ char* get_data_protocol_2(){
     char* thcp_data = get_thpc_data();
     memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
     free(thcp_data);
+    return data;
+}
+
+char* get_data_protocol_3(){
+    char* data = malloc(43);
+    data[0] = get_batt_level();
+    uint32_t timestamp = get_timestamp();
+    memcpy((void*) &(data[1]), (void*) &timestamp, 4);
+    char* thcp_data = get_thpc_data();
+    memcpy((void*) &(data[5]), (void*) &thcp_data, 10);
+    free(thcp_data);
+    float* acc_kpi = get_acceloremeter_kpi();
+    memcpy((void*) &(data[15]), (void*) &acc_kpi, 28);
+    free(acc_kpi);
     return data;
 }
 
