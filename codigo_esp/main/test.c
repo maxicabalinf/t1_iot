@@ -160,21 +160,29 @@ char* get_header(char transport_layer, char protocol_id) {
     int n = 65535;
     int msg_id = rand() % (n + 1);  // 2 bytes
     memcpy((void*)header, (void*)&msg_id, 2);
-    /// no se como leer la mac adress //6 bytes
+    int* mac = malloc(6);
+    // no se como leer la mac adress // 6 bytes
     header[8] = transport_layer;  // 1 byte
     header[9] = protocol_id;      // 1 byte
     unsigned short length;
     switch (protocol_id) {
         case 0:
             length = 13;
+            break;
         case 1:
             length = 17;
+            break;
         case 2:
             length = 27;
+            break;
         case 3:
             length = 55;
+            break;
         case 4:
             length = 48027;
+            break;
+        default:
+            break;
     }
     memcpy((void*)&(head[10]), (void*)&length, 2);
     return header;
@@ -223,7 +231,7 @@ uint8_t get_batt_level() {
 
 uint32_t get_timestamp() {
     time_t t = time(NULL);  // preguntarrrrr
-    return (uint32_t)t;
+    return t;
 }
 
 char* get_data_protocol_0() {
@@ -267,7 +275,7 @@ float* get_acc() {
     for (int i = 0; i < 2000; i++) {
         acc_data[i] = random_float(-16.0, 16.0);
     }
-    return acc_data
+    return acc_data;
 }
 float* get_rgyr() {
     float* rgyr_data = malloc(2000 * sizeof(float));
@@ -303,6 +311,41 @@ char* get_data_protocol_4() {
     free(get_rgyr_y);
     free(get_rgyr_z);
     return data;
+}
+char* get_message(char t_l, char protocol) {
+    int msg_length;
+    char* protocol_data;
+    switch (protocol) {
+        case 0:
+            msg_length = 13;
+            protocol_data = get_data_protocol_0();
+            break;
+        case 1:
+            msg_length = 17;
+            protocol_data = get_data_protocol_1();
+            break;
+        case 2:
+            msg_length = 27;
+            protocol_data = get_data_protocol_2();
+            break;
+        case 3:
+            msg_length = 55;
+            protocol_data = get_data_protocol_3();
+            break;
+        case 4:
+            msg_length = 48027;
+            protocol_data = get_data_protocol_4();
+            break;
+        default:
+            break;
+    }
+    char* msg = malloc(msg_length);
+    char* header = get_headers(t_l, protocol);
+    memcpy((void*)msg, (void*)header, 12);
+    memcpy((void*)msg, (void*)protocol_data, (msg_length - 12));
+    free(header);
+    free(protocol_data);
+    return msg;
 }
 void app_main(void) {
     // nvs_init();
