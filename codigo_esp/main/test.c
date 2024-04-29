@@ -184,7 +184,7 @@ char* get_header(char transport_layer, char protocol_id) {
         default:
             break;
     }
-    memcpy((void*)&(head[10]), (void*)&length, 2);
+    memcpy((void*)&(header[10]), (void*)&length, 2);
     return header;
 }
 
@@ -280,7 +280,7 @@ float* get_acc() {
 float* get_rgyr() {
     float* rgyr_data = malloc(2000 * sizeof(float));
     for (int i = 0; i < 2000; i++) {
-        acc_data[i] = random_float(-1000.0, 1000.0);
+        rgyr_data[i] = random_float(-1000.0, 1000.0);
     }
     return rgyr_data;
 }
@@ -295,32 +295,35 @@ char* get_data_protocol_4() {
     float* get_acc_x = get_acc();
     float* get_acc_y = get_acc();
     float* get_acc_z = get_acc();
-    memcpy((void*)&(data[15]), (void*)&acc_kpi, 8000);
-    memcpy((void*)&(data[8015]), (void*)&acc_kpi, 8000);
-    memcpy((void*)&(data[16015]), (void*)&acc_kpi, 8000);
+    memcpy((void*)&(data[15]), (void*)&get_acc_x, 8000);
+    memcpy((void*)&(data[8015]), (void*)&get_acc_y, 8000);
+    memcpy((void*)&(data[16015]), (void*)&get_acc_z, 8000);
     free(get_acc_x);
     free(get_acc_y);
     free(get_acc_z);
     float* get_rgyr_x = get_rgyr();
     float* get_rgyr_y = get_rgyr();
     float* get_rgyr_z = get_rgyr();
-    memcpy((void*)&(data[24015]), (void*)&acc_kpi, 8000);
-    memcpy((void*)&(data[32015]), (void*)&acc_kpi, 8000);
-    memcpy((void*)&(data[40015]), (void*)&acc_kpi, 8000);
+    memcpy((void*)&(data[24015]), (void*)&get_rgyr_x, 8000);
+    memcpy((void*)&(data[32015]), (void*)&get_rgyr_y, 8000);
+    memcpy((void*)&(data[40015]), (void*)&get_rgyr_z, 8000);
     free(get_rgyr_x);
     free(get_rgyr_y);
     free(get_rgyr_z);
     return data;
 }
 char* get_message(char t_l, char protocol) {
+    printf("%c\n",protocol);
     int msg_length;
     char* protocol_data;
     switch (protocol) {
         case 0:
+            printf("llegue a case 0");
             msg_length = 13;
             protocol_data = get_data_protocol_0();
             break;
         case 1:
+            printf("llegue a case 1");
             msg_length = 17;
             protocol_data = get_data_protocol_1();
             break;
@@ -337,12 +340,15 @@ char* get_message(char t_l, char protocol) {
             protocol_data = get_data_protocol_4();
             break;
         default:
+            msg_length = 0;
+            protocol_data = NULL;
             break;
     }
     char* msg = malloc(msg_length);
-    char* header = get_headers(t_l, protocol);
+    char* header = get_header(t_l, protocol);
     memcpy((void*)msg, (void*)header, 12);
-    memcpy((void*)msg, (void*)protocol_data, (msg_length - 12));
+    int new_msg_length = msg_length -12;
+    memcpy((void*)msg, (void*)protocol_data, new_msg_length);
     free(header);
     free(protocol_data);
     return msg;
@@ -352,7 +358,5 @@ void app_main(void) {
     // wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
     // ESP_LOGI(TAG, "Conectado a WiFi!\n");
     // socket_tcp();
-    float t_data[7];
-    get_acceloremeter_kpi(t_data);
-    printf("%f\t%f\t%f\t%f\t%f\t%f\t%f", t_data[0], t_data[1], t_data[2], t_data[3], t_data[4], t_data[5], t_data[6]);
+    char* message = get_message(0,1);
 }
