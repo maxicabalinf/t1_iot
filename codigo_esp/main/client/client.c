@@ -211,13 +211,18 @@ char* get_acceloremeter_kpi() {
 }
 
 char* get_thpc_data() {
-    char* data_thpc = malloc(10);
-    data_thpc[0] = (char)5 + (rand() % 26);  // temperatura 1 byte
-    long pres = 1000 + (rand() % 201);       // presion 4 bytes
-    memcpy((void*)&(data_thpc[1]), (void*)&pres, 4);
-    data_thpc[5] = (char)random_float(30.0, 80.0);  // humedad 1 byte
-    float co = random_float(30.0, 200.0);           // co 4 bytes
-    memcpy((void*)&(data_thpc[6]), (void*)&co, 4);
+    THCP thcp;
+    thcp.temp = (char)5 + (rand() % 26);  // temperatura 1 byte
+    thcp.press = 1000 + (rand() % 201);   // presion 4 bytes
+    thcp.hum = random_float(30.0, 80.0);  // humedad 1 byte
+    thcp.co = random_float(30.0, 200.0);  // co 4 bytes
+
+    char* data_thpc = malloc(THCP_SIZE);
+    memcpy((void*)&(data_thpc[0]), (void*)&thcp.temp, sizeof(thcp.temp));
+    memcpy((void*)&(data_thpc[1]), (void*)&thcp.press, sizeof(thcp.press));
+    memcpy((void*)&(data_thpc[5]), (void*)&thcp.hum, sizeof(thcp.hum));
+    memcpy((void*)&(data_thpc[6]), (void*)&thcp.co, sizeof(thcp.co));
+
     return data_thpc;
 }
 
