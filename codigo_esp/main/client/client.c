@@ -1,3 +1,5 @@
+#include "client.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -192,26 +194,20 @@ float random_float(float min, float max) {
     return min + (float)rand() / ((float)RAND_MAX / (max - min));
 }
 
-float* get_acceloremeter_kpi() {
-    float* acc_kpi_data = malloc(28);
-    float ampx = random_float(0.0059, 0.12);  // ampx
-    memcpy((void*)&(acc_kpi_data[4]), (void*)&ampx, 4);
-    float freqx = random_float(29.0, 31.0);  // freqx
-    memcpy((void*)&(acc_kpi_data[8]), (void*)&freqx, 4);
-    float ampy = random_float(0.0041, 0.11);  // ampy
-    memcpy((void*)&(acc_kpi_data[12]), (void*)&ampy, 4);
-    float freqy = random_float(59.0, 61.0);  // freqy
-    memcpy((void*)&(acc_kpi_data[16]), (void*)&freqy, 4);
-    float ampz = random_float(0.008, 0.15);  // ampz
-    memcpy((void*)&(acc_kpi_data[20]), (void*)&ampz, 4);
-    float freqz = random_float(89.0, 91.0);  // freqz
-    memcpy((void*)&(acc_kpi_data[24]), (void*)&freqz, 4);
-    float rms = (float)sqrt(
-        (ampx * ampx) +
-        (ampy * ampy) +
-        (ampz * ampz));  // rms
-    memcpy((void*)&(acc_kpi_data[0]), (void*)&rms, 4);
-    return acc_kpi_data;
+char* get_acceloremeter_kpi() {
+    AccelerometerKPI* kpi = malloc(sizeof(AccelerometerKPI));
+    kpi->amp_x = random_float(0.0059, 0.12);  // ampx
+    kpi->freq_x = random_float(29.0, 31.0);   // freqx
+    kpi->amp_y = random_float(0.0041, 0.11);  // ampy
+    kpi->freq_y = random_float(59.0, 61.0);   // freqy
+    kpi->amp_z = random_float(0.008, 0.15);   // ampz
+    kpi->freq_z = random_float(89.0, 91.0);   // freqz
+    kpi->rms = (float)sqrt(                   // rms
+        (kpi->amp_x * kpi->amp_x) +
+        (kpi->amp_y * kpi->amp_y) +
+        (kpi->amp_z * kpi->amp_z));
+
+    return (char*)kpi;
 }
 
 char* get_thpc_data() {
@@ -313,7 +309,7 @@ char* get_data_protocol_4() {
     return data;
 }
 char* get_message(char t_l, char protocol) {
-    printf("%c\n",protocol);
+    printf("%c\n", protocol);
     int msg_length;
     char* protocol_data;
     switch (protocol) {
@@ -347,7 +343,7 @@ char* get_message(char t_l, char protocol) {
     char* msg = malloc(msg_length);
     char* header = get_header(t_l, protocol);
     memcpy((void*)msg, (void*)header, 12);
-    int new_msg_length = msg_length -12;
+    int new_msg_length = msg_length - 12;
     memcpy((void*)msg, (void*)protocol_data, new_msg_length);
     free(header);
     free(protocol_data);
@@ -358,5 +354,5 @@ void app_main(void) {
     // wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
     // ESP_LOGI(TAG, "Conectado a WiFi!\n");
     // socket_tcp();
-    char* message = get_message(0,1);
+    char* message = get_message(0, 1);
 }
