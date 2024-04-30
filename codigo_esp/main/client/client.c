@@ -157,37 +157,26 @@ void socket_tcp() {
 // Empaquetado de datos
 //--------------------------------------------------------------------//
 
-char* get_header(char transport_layer, char protocol_id) {
-    char* header = malloc(12);
-    int n = 65535;
-    int msg_id = rand() % (n + 1);  // 2 bytes
-    memcpy((void*)header, (void*)&msg_id, 2);
-    int* mac = malloc(6);
-    // no se como leer la mac adress // 6 bytes
-    header[8] = transport_layer;  // 1 byte
-    header[9] = protocol_id;      // 1 byte
-    unsigned short length;
-    switch (protocol_id) {
-        case 0:
-            length = 13;
-            break;
-        case 1:
-            length = 17;
-            break;
-        case 2:
-            length = 27;
-            break;
-        case 3:
-            length = 55;
-            break;
-        case 4:
-            length = 48027;
-            break;
-        default:
-            break;
+void copy_mac(uint8_t* source, uint8_t* target) {
+    for (int i = 0; i < 6; i++) {
+        target[i] = source[i];
     }
-    memcpy((void*)&(header[10]), (void*)&length, 2);
-    return header;
+}
+
+uint8_t msg_id = 0;
+
+char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16_t msg_length) {
+    Header* header = malloc(sizeof(Header));
+    header->msg_id = msg_id++;
+    if (mac == NULL) {
+        esp_wifi_get_mac(WIFI_IF_STA, header->mac);
+    } else {
+        copy_mac(mac, header->mac);
+    }
+    header->transport_layer = transport_layer;
+    header->protocol_id = protocol_id;
+    header->length = msg_length;
+    return (char*)header;
 }
 
 float random_float(float min, float max) {
