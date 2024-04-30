@@ -91,3 +91,12 @@ const int PROTOCOL_BODY_SIZE[] = {
     PROTOCOL_3_BODY_SIZE,
     PROTOCOL_4_BODY_SIZE,
 };
+
+/**
+ * @brief Genera un mensaje para enviar al servidor.
+ *
+ * @param transport_layer Tipo de capa de transporte.
+ * @param protocol_id Protocolo del cuerpo del mensaje.
+ * @return char* Puntero al mensaje.
+ */
+char* get_message(char transport_layer, unsigned char protocol_id);
