@@ -335,47 +335,40 @@ char* get_data_protocol_4() {
 
     return data;
 }
-char* get_message(char t_l, char protocol) {
-    printf("%c\n", protocol);
-    int msg_length;
-    char* protocol_data;
-    switch (protocol) {
-        case 0:
-            printf("llegue a case 0");
-            msg_length = 13;
-            protocol_data = get_data_protocol_0();
-            break;
-        case 1:
-            printf("llegue a case 1");
-            msg_length = 17;
-            protocol_data = get_data_protocol_1();
-            break;
-        case 2:
-            msg_length = 27;
-            protocol_data = get_data_protocol_2();
-            break;
-        case 3:
-            msg_length = 55;
-            protocol_data = get_data_protocol_3();
-            break;
-        case 4:
-            msg_length = 48027;
-            protocol_data = get_data_protocol_4();
-            break;
-        default:
-            msg_length = 0;
-            protocol_data = NULL;
-            break;
-    }
+
+// Agrupa los generadores de cuerpo de mensaje.
+char* (*body_creator[])() = {
+    get_data_protocol_0,
+    get_data_protocol_1,
+    get_data_protocol_2,
+    get_data_protocol_3,
+    get_data_protocol_4,
+};
+
+/**
+ * @brief Genera un mensaje para enviar al servidor.
+ *
+ * @param transport_layer Tipo de capa de transporte.
+ * @param protocol_id Protocolo del cuerpo del mensaje.
+ * @return char* Puntero al mensaje.
+ */
+char* get_message(char transport_layer, char protocol_id) {
+    int body_size = PROTOCOL_BODY_SIZE[protocol_id];
+    char* body_data = body_creator[protocol_id]();
+    int msg_length = HEADER_SIZE + body_size;
     char* msg = malloc(msg_length);
-    char* header = get_header(t_l, protocol);
-    memcpy((void*)msg, (void*)header, 12);
-    int new_msg_length = msg_length - 12;
-    memcpy((void*)msg, (void*)protocol_data, new_msg_length);
-    free(header);
-    free(protocol_data);
+
+    int cursor = 0;
+    cat_n_free_n_shift(msg[cursor],
+                       get_header_(NULL, transport_layer, protocol_id,
+                                   body_size),
+                       HEADER_SIZE,
+                       &cursor);
+    cat_n_free_n_shift(msg[cursor], body_data, body_size, &cursor);
+
     return msg;
 }
+
 void app_main(void) {
     // nvs_init();
     // wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
