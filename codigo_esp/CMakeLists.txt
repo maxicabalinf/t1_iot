@@ -4,5 +4,16 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
 
+set(
+  COMPONENTS
+    main
+    esp_event
+    log
+    esp_system
+    esp_wifi
+    freertos
+    lwip
+    nvs_flash
+  )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(test)
+project(t1_iot)
