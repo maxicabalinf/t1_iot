@@ -235,42 +235,79 @@ uint32_t get_timestamp() {
     return t;
 }
 
+/**
+ * @brief Crea un cuerpo para el protocolo 0.
+ *
+ * @return char* Puntero al cuerpo.
+ */
 char* get_data_protocol_0() {
-    char* data = malloc(1);
+    char* data = malloc(PROTOCOL_BODY_SIZE[0]);
     data[0] = get_batt_level();
-    return data;
-}
-char* get_data_protocol_1() {
-    char* data = malloc(5);
-    data[0] = get_batt_level();
-    uint32_t timestamp = get_timestamp();
-    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
-    return data;
-}
-char* get_data_protocol_2() {
-    char* data = malloc(15);
-    data[0] = get_batt_level();
-    uint32_t timestamp = get_timestamp();
-    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
-    char* thcp_data = get_thpc_data();
-    memcpy((void*)&(data[5]), (void*)&thcp_data, 10);
-    free(thcp_data);
     return data;
 }
 
-char* get_data_protocol_3() {
-    char* data = malloc(43);
+/**
+ * @brief Crea un cuerpo para el protocolo 1.
+ *
+ * @return char* Puntero al cuerpo.
+ */
+char* get_data_protocol_1() {
+    char* data = malloc(PROTOCOL_BODY_SIZE[1]);
     data[0] = get_batt_level();
     uint32_t timestamp = get_timestamp();
-    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
-    char* thcp_data = get_thpc_data();
-    memcpy((void*)&(data[5]), (void*)&thcp_data, 10);
-    free(thcp_data);
-    float* acc_kpi = get_acceloremeter_kpi();
-    memcpy((void*)&(data[15]), (void*)&acc_kpi, 28);
-    free(acc_kpi);
+    memcpy((void*)&(data[1]), (void*)&timestamp, sizeof(timestamp));
     return data;
 }
+
+/**
+ * @brief Copia bytes de un lugar a otro. Libera el espacio del origen de los
+ * datos y actualiza el desfase del destino.
+ *
+ * @param destination Dirección del destino.
+ * @param source Dirección del origen.
+ * @param size Cantidad de bytes a copiar.
+ * @param cursor Dirección del cursor que lleva la cuenta del desfase.
+ */
+void cat_n_free_n_shift(void* destination, void* source, size_t size,
+                        int* cursor) {
+    memcpy(destination, source, size);
+    free(source);
+    *cursor += size;
+};
+
+/**
+ * @brief Crea un cuerpo para el protocolo 2.
+ *
+ * @return char* Puntero al cuerpo.
+ */
+char* get_data_protocol_2() {
+    char* data = malloc(PROTOCOL_BODY_SIZE[2]);
+    int cursor = 0;
+    cat_n_free_n_shift(&(data[cursor]), get_data_protocol_1(),
+                       PROTOCOL_BODY_SIZE[1], &cursor);
+    cat_n_free_n_shift(&(data[cursor]), get_thpc_data(),
+                       THCP_SIZE, &cursor);
+
+    return data;
+}
+
+/**
+ * @brief Crea un cuerpo para el protocolo 3.
+ *
+ * @return char* Puntero al cuerpo.
+ */
+char* get_data_protocol_3() {
+    char* data = malloc(PROTOCOL_BODY_SIZE[3]);
+    int cursor = 0;
+
+    cat_n_free_n_shift(&(data[cursor]), get_data_protocol_2(),
+                       PROTOCOL_BODY_SIZE[2], &cursor);
+    cat_n_free_n_shift(&(data[cursor]), get_acceloremeter_kpi(),
+                       KPI_SIZE, &cursor);
+
+    return data;
+}
+
 float* get_acc() {
     float* acc_data = malloc(2000 * sizeof(float));
     for (int i = 0; i < 2000; i++) {
@@ -278,6 +315,7 @@ float* get_acc() {
     }
     return acc_data;
 }
+
 float* get_rgyr() {
     float* rgyr_data = malloc(2000 * sizeof(float));
     for (int i = 0; i < 2000; i++) {
@@ -285,32 +323,27 @@ float* get_rgyr() {
     }
     return rgyr_data;
 }
+
+/**
+ * @brief Crea un cuerpo para el protocolo 4.
+ *
+ * @return char* Puntero al cuerpo.
+ */
 char* get_data_protocol_4() {
-    char* data = malloc(48015);
-    data[0] = get_batt_level();
-    uint32_t timestamp = get_timestamp();
-    memcpy((void*)&(data[1]), (void*)&timestamp, 4);
-    char* thcp_data = get_thpc_data();
-    memcpy((void*)&(data[5]), (void*)&thcp_data, 10);
-    free(thcp_data);
-    float* get_acc_x = get_acc();
-    float* get_acc_y = get_acc();
-    float* get_acc_z = get_acc();
-    memcpy((void*)&(data[15]), (void*)&get_acc_x, 8000);
-    memcpy((void*)&(data[8015]), (void*)&get_acc_y, 8000);
-    memcpy((void*)&(data[16015]), (void*)&get_acc_z, 8000);
-    free(get_acc_x);
-    free(get_acc_y);
-    free(get_acc_z);
-    float* get_rgyr_x = get_rgyr();
-    float* get_rgyr_y = get_rgyr();
-    float* get_rgyr_z = get_rgyr();
-    memcpy((void*)&(data[24015]), (void*)&get_rgyr_x, 8000);
-    memcpy((void*)&(data[32015]), (void*)&get_rgyr_y, 8000);
-    memcpy((void*)&(data[40015]), (void*)&get_rgyr_z, 8000);
-    free(get_rgyr_x);
-    free(get_rgyr_y);
-    free(get_rgyr_z);
+    char* data = malloc(PROTOCOL_BODY_SIZE[4]);
+    int cursor = 0;
+
+    cat_n_free_n_shift(&(data[cursor]), get_data_protocol_2(),
+                       PROTOCOL_BODY_SIZE[2], &cursor);
+    for (int i = 0; i < 3; i++) {  // Añade acc_<axis>
+        cat_n_free_n_shift(&(data[cursor]), get_acc(),
+                           ACC_ARRAY_SIZE, &cursor);
+    }
+    for (int i = 0; i < 3; i++) {  // Añade rgyr_<axis>
+        cat_n_free_n_shift(&(data[cursor]), get_rgyr(),
+                           ACC_ARRAY_SIZE, &cursor);
+    }
+
     return data;
 }
 char* get_message(char t_l, char protocol) {
