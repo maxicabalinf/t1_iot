@@ -352,19 +352,19 @@ char* (*body_creator[])() = {
  * @param protocol_id Protocolo del cuerpo del mensaje.
  * @return char* Puntero al mensaje.
  */
-char* get_message(char transport_layer, char protocol_id) {
+char* get_message(char transport_layer, unsigned char protocol_id) {
     int body_size = PROTOCOL_BODY_SIZE[protocol_id];
     char* body_data = body_creator[protocol_id]();
     int msg_length = HEADER_SIZE + body_size;
     char* msg = malloc(msg_length);
 
     int cursor = 0;
-    cat_n_free_n_shift(msg[cursor],
+    cat_n_free_n_shift(&msg[cursor],
                        get_header_(NULL, transport_layer, protocol_id,
                                    body_size),
                        HEADER_SIZE,
                        &cursor);
-    cat_n_free_n_shift(msg[cursor], body_data, body_size, &cursor);
+    cat_n_free_n_shift(&msg[cursor], body_data, body_size, &cursor);
 
     return msg;
 }

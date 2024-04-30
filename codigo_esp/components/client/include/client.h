@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16_t msg_length);
@@ -49,14 +51,14 @@ typedef struct {
     uint8_t batt_level;
 } Protocol0;
 
-const int PROTOCOL_0_BODY_SIZE = 1;
+static const int PROTOCOL_0_BODY_SIZE = 1;
 
 typedef struct {
     uint8_t batt_level;
     uint32_t timestamp;
 } Protocol1;
 
-const int PROTOCOL_1_BODY_SIZE = (PROTOCOL_0_BODY_SIZE + 4);
+static const int PROTOCOL_1_BODY_SIZE = (PROTOCOL_0_BODY_SIZE + 4);
 
 typedef struct {
     uint8_t batt_level;
@@ -64,7 +66,7 @@ typedef struct {
     THCP tchp;
 } Protocol2;
 
-const int PROTOCOL_2_BODY_SIZE = (PROTOCOL_1_BODY_SIZE + THCP_SIZE);
+static const int PROTOCOL_2_BODY_SIZE = (PROTOCOL_1_BODY_SIZE + THCP_SIZE);
 
 typedef struct {
     uint8_t batt_level;
@@ -73,7 +75,7 @@ typedef struct {
     AccelerometerKPI kpi;
 } Protocol3;
 
-const int PROTOCOL_3_BODY_SIZE = (PROTOCOL_2_BODY_SIZE + KPI_SIZE);
+static const int PROTOCOL_3_BODY_SIZE = (PROTOCOL_2_BODY_SIZE + KPI_SIZE);
 
 typedef struct {
     uint8_t batt_level;
@@ -82,9 +84,9 @@ typedef struct {
     AccelerometerSensor sensor;
 } Protocol4;
 
-const int PROTOCOL_4_BODY_SIZE = (PROTOCOL_2_BODY_SIZE + ACC_SENSOR_SIZE);
+static const int PROTOCOL_4_BODY_SIZE = (PROTOCOL_2_BODY_SIZE + ACC_SENSOR_SIZE);
 
-const int PROTOCOL_BODY_SIZE[] = {
+static const int PROTOCOL_BODY_SIZE[] = {
     PROTOCOL_0_BODY_SIZE,
     PROTOCOL_1_BODY_SIZE,
     PROTOCOL_2_BODY_SIZE,
