@@ -3,6 +3,7 @@ from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
     TimestampField, ForeignKeyField, TimeField, FloatField, CompositeKey, \
     BooleanField, Check, SQL
 from playhouse.postgres_ext import ArrayField
+from enum import Enum
 
 # Configuración de la base de datos
 db_config = {
@@ -13,6 +14,12 @@ db_config = {
     'database': 'iot_db'
 }
 db = PostgresqlDatabase(**db_config)
+
+
+class TransportLayerValue(Enum):
+    """Enumeración de tipos de capa de transporte."""
+    TCP = 0
+    UDP = 1
 
 
 class BaseModel(Model):
