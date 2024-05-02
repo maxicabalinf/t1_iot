@@ -93,6 +93,29 @@ def pack(packet_id: int, value_float: float, text: str) -> bytes:
                        text.encode('utf-8'))
 
 
+# Little endian, unsigned short, 6 char, unsigned char, unsigned char,
+# unsigned short
+HEADER_FORMAT = '<H6sBBH'
+
+
+class Header:
+    """Representación del encabezado de un paquete."""
+    packet_id: int
+    mac: bytes
+    transport_layer: int
+    protocol_id: int
+    packet_leng: int
+
+    def __init__(self, header_bytes: bytes) -> None:
+        (
+            self.packet_id,
+            self.mac,
+            self.transport_layer,
+            self.protocol_id,
+            self.packet_leng,
+        ) = struct.unpack(HEADER_FORMAT, header_bytes)
+
+
 def unpack(packet: bytes) -> list:
     """Desempaqueta en [packet_id, value_float, text]"""
     packet_id, value_float, largo_text = struct.unpack('<ifi', packet[:12])
