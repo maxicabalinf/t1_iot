@@ -104,7 +104,7 @@ class Header:
     mac: bytes
     transport_layer: int
     protocol_id: int
-    packet_leng: int
+    packet_length: int
 
     def __init__(self, header_bytes: bytes) -> None:
         (
@@ -112,7 +112,7 @@ class Header:
             self.mac,
             self.transport_layer,
             self.protocol_id,
-            self.packet_leng,
+            self.packet_length,
         ) = struct.unpack(HEADER_FORMAT, header_bytes)
 
 
