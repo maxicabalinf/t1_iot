@@ -24,6 +24,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 import socket
 import threading
 from modelos import Configuration, TransportLayerValue
+from packet_parser import get_packet_size
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
@@ -85,6 +86,16 @@ def handle_client():
     pass
 
 
+def handle_tcp_client(tcp_client: socket, config):
+    """Ejecuta el procedimiento de almacenado para un cliente TCP."""
+    protocol_id = config['body_protocol_id']
+    pckt = tcp_client.recv(get_packet_size(protocol_id))
+    # TODO: parsear paquete
+    # TODO: almacenar mensaje (Datum)
+    # TODO: escribir logs (Log)
+    # TODO: escribir loss
+
+
 if __name__ == '__main__':
     # Referenciado de https://www.datacamp.com/tutorial/a-complete-guide-to-socket-programming-in-python
 
@@ -100,15 +111,11 @@ if __name__ == '__main__':
         while True:
             # accept a client connection
             client_socket, addr = server.accept()
-            header_ini = client_socket.recv(1024)
-            data = client_socket.recv(1024)
-            if not data:
-                break
-            client_socket.send(data)
             print(f"Accepted connection from {addr[0]}:{addr[1]}")
 
             # # Consultar la tabla de configuración en la base de datos
             cfg = get_cfg()
+            # TODO: enviar headers con configuración
 
             # Abre conexión con protocolo correspondiente
             if cfg['transport_layer_id'] == TransportLayerValue.TCP:
