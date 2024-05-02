@@ -69,6 +69,11 @@ PROTOCOL_BODY_SIZE = [
 ]
 
 
+def get_packet_size(body_protocol_id):
+    """Calcula el tamaño de paquete de un protocolo dado."""
+    return PROTOCOL_BODY_SIZE[body_protocol_id] + HEADER_SIZE
+
+
 def pack(packet_id: int, value_float: float, text: str) -> bytes:
     """
      '<' significa que se codifica en little-endian
