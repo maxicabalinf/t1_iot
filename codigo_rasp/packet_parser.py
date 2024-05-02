@@ -49,6 +49,7 @@ void unpack(char * packet) {
 """
 
 import struct  # Libreria muy util para codificar y decodificar datos
+from modelos import Datum
 
 HEADER_SIZE = 12
 THCP_SIZE = 10
@@ -114,6 +115,23 @@ class Header:
             self.protocol_id,
             self.packet_length,
         ) = struct.unpack(HEADER_FORMAT, header_bytes)
+
+
+class Packet:
+    """Representación de un paquete."""
+    header: Header
+    body: Datum
+    loss: int
+
+    def __init__(self, packet_bytes: bytes) -> None:
+        self.header = Header(packet_bytes[:12])
+        self.loss = self.header.packet_length - len(packet_bytes)
+        self.body = self.parse_body(packet_bytes[12:])
+
+    def parse_body(self, body_bytes: bytes):
+        """Desempaqueta el cuerpo de un paquete."""
+        # TODO: desempaquetar cuerpo
+        return Datum()
 
 
 def unpack(packet: bytes) -> list:
