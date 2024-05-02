@@ -40,15 +40,16 @@ def get_cfg():
     return cfg_row[0]
 
 
-def build_headers(id_msg, mac, transport_layer, id_protocol, length):
+def build_headers(id_msg: int, mac: str, transport_layer: int, id_protocol: int,
+                  length: int):
     """Retorna el header de un mensaje"""
-    assert (len(mac) == 12)
+    assert len(mac) == 12
     bytes_list = [
-        id_msg.to_bytes(2, byteorder='big'),
+        id_msg.to_bytes(2, byteorder='little'),
         bytearray.fromhex(mac),
-        transport_layer.to_bytes(1, byteorder='big'),
-        id_protocol.to_bytes(1, byteorder='big'),
-        length.to_bytes(2, byteorder='big'),
+        transport_layer.to_bytes(1, byteorder='little'),
+        id_protocol.to_bytes(1, byteorder='little'),
+        length.to_bytes(2, byteorder='little'),
     ]
 
     header = b''.join(bytes_list)
