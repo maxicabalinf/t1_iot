@@ -1,6 +1,26 @@
 #pragma once
 
 #include <stdint.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+// Credenciales de WiFi
+
+#define WIFI_SSID "Julieta 2.4"
+#define WIFI_PASSWORD "chile.com"
+#define SERVER_IP "192.168.100.15"  // IP del servidor
+#define SERVER_PORT 1234
+
+// Variables de WiFi
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT BIT1
+static const char* TAG = "WIFI";
+static int s_retry_num = 0;
+static EventGroupHandle_t s_wifi_event_group;
+
+//WIFI
+void nvs_init();
+void socket_tcp();
+void wifi_init_sta(char* ssid, char* password);
 
 char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16_t msg_length);
 

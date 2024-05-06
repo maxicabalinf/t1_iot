@@ -10,26 +10,12 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"  // Para sockets
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 
-// Credenciales de WiFi
 
-#define WIFI_SSID "raspiiot"
-#define WIFI_PASSWORD "raspiiot"
-#define SERVER_IP "192.168.0.1"  // IP del servidor
-#define SERVER_PORT 1234
-
-// Variables de WiFi
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
-static const char* TAG = "WIFI";
-static int s_retry_num = 0;
-static EventGroupHandle_t s_wifi_event_group;
 
 void event_handler(void* arg, esp_event_base_t event_base,
                    int32_t event_id, void* event_data) {
