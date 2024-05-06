@@ -385,6 +385,7 @@ void app_main(void) {
         int len = recv(sock_inicial,configuration,2,0);
         char transport_layer = configuration[0];
         char protocolo = configuration[1];
+        free(configuration);
         if(transport_layer == 0){ //si es TCP
             //hago funcion que envie TCP
         }
