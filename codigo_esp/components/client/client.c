@@ -15,8 +15,6 @@
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 
-
-
 void event_handler(void* arg, esp_event_base_t event_base,
                    int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -103,41 +101,37 @@ void nvs_init() {
     ESP_ERROR_CHECK(ret);
 }
 
-void socket_tcp() {
+void socket_tcp(char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock < 0) {
-        ESP_LOGE(TAG, "Error al crear el socket");
-        return;
-    }
+    while (1) {
+        int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (sock < 0) {
+            ESP_LOGE(TAG, "Error al crear el socket");
+            break;
+        }
 
-    // Conectar al servidor
-    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
-        ESP_LOGE(TAG, "Error al conectar");
+        // Conectar al servidor
+        if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
+            ESP_LOGE(TAG, "Error al conectar");
+            close(sock);
+            break;
+        }
+
+        // Enviar mensaje
+        send(sock, msg, size, 0);
+        free(msg);
+        ESP_LOGI(TAG, "Mensaje enviado con éxito");
+        vTaskDelay(60000 / portTICK_PERIOD_MS);
+        shutdown(sock, 0);
+        // Cerrar el socket
         close(sock);
-        return;
+        break;
     }
-
-    // Enviar mensaje "Hola Mundo"
-    send(sock, "hola mundo", strlen("hola mundo"), 0);
-
-    // Recibir respuesta
-
-    char rx_buffer[128];
-    int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-    if (rx_len < 0) {
-        ESP_LOGE(TAG, "Error al recibir datos");
-        return;
-    }
-    ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
-
-    // Cerrar el socket
-    close(sock);
 }
 //--------------------------------------------------------------------//
 // Empaquetado de datos

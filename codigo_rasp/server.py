@@ -22,39 +22,39 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 """
 
 import socket
-import sys
-import jsockets
-from modelos import Configuration
+import threading
+from modelos import Configuration, TransportLayerValue
+from packet_parser import get_packet_size
+
+HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
+PORT = 1234       # Puerto en el que se escucha
 
 
 def get_cfg():
     """Extrae la configuración de la base de datos"""
-    cfg = Configuration.select(
+    cfg_row = Configuration.select(
         Configuration.body_protocol_id,
         Configuration.transport_layer_id
     ).dicts()
-    if len(cfg) == 0:
-        raise Exception
-    return cfg[0]
+    if len(cfg_row) == 0:
+        raise Exception('No hay configuración')
+    return cfg_row[0]
 
 
-def build_headers(id_msg, mac, transport_layer, id_protocol, length):
+def build_headers(id_msg: int, mac: str, transport_layer: int, id_protocol: int,
+                  length: int):
     """Retorna el header de un mensaje"""
-    assert (len(mac) == 12)
+    assert len(mac) == 12
     bytes_list = [
-        id_msg.to_bytes(2, byteorder='big'),
+        id_msg.to_bytes(2, byteorder='little'),
         bytearray.fromhex(mac),
-        transport_layer.to_bytes(1, byteorder='big'),
-        id_protocol.to_bytes(1, byteorder='big'),
-        length.to_bytes(2, byteorder='big'),
+        transport_layer.to_bytes(1, byteorder='little'),
+        id_protocol.to_bytes(1, byteorder='little'),
+        length.to_bytes(2, byteorder='little'),
     ]
 
     header = b''.join(bytes_list)
     return header
-
-
-# HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
-PORT = 1234       # Puerto en el que se escucha
 
 
 def send_headers(sock):
@@ -69,17 +69,6 @@ def parse_msg(pkt):
     pass
 
 
-# Espera un mensaje y protocolo de acuerdo  a lo que consulto en la BD.
-# Parsear y guardar en la base de datos.
-packet: bytes = None
-parse_msg(packet)
-
-
-res: bytes = None  # solicitud de conexión
-sock: socket = None
-send_headers(sock)
-
-
 # Crear 2 sockets, TCP Y UDP
 # while infinito revisando la base de datos.(siempre comienza con TCP)
 # Parsear los datos
@@ -88,33 +77,61 @@ send_headers(sock)
 # Si el largo del body es menor que de los headers, entonces se calcula
 # la diferencia entre el largo indicado en los headers y lo que llegó.
 
-# Se almacena la diferencia de timestamps entre que se guardó la conexión en la tabla Logs
-# y el servidor escribió los datos en la tabla Datos.
+# Se almacena la diferencia de timestamps entre que se guardó la conexión en la
+# tabla Logs y el servidor escribió los datos en la tabla Datos.
 
 # Finalmente se reinicia el ciclo.
 
+def handle_client():
+    pass
 
-# Esperando un mensaje con TCP
+
+def handle_tcp_client(tcp_client: socket, config):
+    """Ejecuta el procedimiento de almacenado para un cliente TCP."""
+    protocol_id = config['body_protocol_id']
+    pckt = tcp_client.recv(get_packet_size(protocol_id))
+    # TODO: parsear paquete
+    # TODO: almacenar mensaje (Datum)
+    # TODO: escribir logs (Log)
+    # TODO: escribir loss
+
+
 if __name__ == '__main__':
-    # Abre socket y queda a la escucha
-    s = jsockets.socket_tcp_bind(PORT)
-    if s is None:
-        print('could not open socket')
-        sys.exit(1)
+    # Referenciado de https://www.datacamp.com/tutorial/a-complete-guide-to-socket-programming-in-python
 
-    while True:
-        # Acepta una conexión de ESP
-        conn, addr = s.accept()
-        print('Connected by', addr)
-        header_ini = conn.recv(1024)
-        # Consultar la tabla de configuración en la base de datos
-        cfg = get_cfg()
-        response_header = """"""
-        conn.send(response_header)
+    # Esperando un mensaje con TCP
+    try:
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # bind the socket to the host and port
+        server.bind((HOST, PORT))
+        # listen for incoming connections
+        server.listen()
+        print(f"Listening on {HOST}:{PORT}")
+
         while True:
-            data = conn.recv(1024)
-            if not data:
-                break
-            conn.send(data)
-        # conn.close()
-        # print('Client disconnected')
+            # accept a client connection
+            client_socket, addr = server.accept()
+            print(f"Accepted connection from {addr[0]}:{addr[1]}")
+
+            # # Consultar la tabla de configuración en la base de datos
+            cfg = get_cfg()
+            # TODO: enviar headers con configuración
+
+            # Abre conexión con protocolo correspondiente
+            if cfg['transport_layer_id'] == TransportLayerValue.TCP:
+                # Usa nuevo socket creado
+                thread = threading.Thread(
+                    target=handle_client, args=(client_socket, addr,))
+                thread.start()
+            if cfg['transport_layer_id'] == TransportLayerValue.UDP:
+                # Establece nueva conexión por UCP con cliente
+                thread = threading.Thread(
+                    target=handle_client, args=(client_socket, addr,))
+                thread.start()
+            else:
+                print(f'Invalid transport layer ({cfg["transport_layer_id"]})')
+
+    except socket.error as e:
+        print(f"Error: {e}")
+    finally:
+        server.close()

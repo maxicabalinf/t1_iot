@@ -49,6 +49,30 @@ void unpack(char * packet) {
 """
 
 import struct  # Libreria muy util para codificar y decodificar datos
+from modelos import Datum
+
+HEADER_SIZE = 12
+THCP_SIZE = 10
+KPI_SIZE = 28
+ACC_ARRAY_SIZE = 8000
+ACC_SENSOR_SIZE = 48000
+PROTOCOL_0_BODY_SIZE = 1
+PROTOCOL_1_BODY_SIZE = PROTOCOL_0_BODY_SIZE + 4
+PROTOCOL_2_BODY_SIZE = PROTOCOL_1_BODY_SIZE + THCP_SIZE
+PROTOCOL_3_BODY_SIZE = PROTOCOL_2_BODY_SIZE + KPI_SIZE
+PROTOCOL_4_BODY_SIZE = PROTOCOL_2_BODY_SIZE + ACC_SENSOR_SIZE
+PROTOCOL_BODY_SIZE = [
+    PROTOCOL_0_BODY_SIZE,
+    PROTOCOL_1_BODY_SIZE,
+    PROTOCOL_2_BODY_SIZE,
+    PROTOCOL_3_BODY_SIZE,
+    PROTOCOL_4_BODY_SIZE,
+]
+
+
+def get_packet_size(body_protocol_id):
+    """Calcula el tamaño de paquete de un protocolo dado."""
+    return PROTOCOL_BODY_SIZE[body_protocol_id] + HEADER_SIZE
 
 
 def pack(packet_id: int, value_float: float, text: str) -> bytes:
@@ -68,6 +92,46 @@ def pack(packet_id: int, value_float: float, text: str) -> bytes:
                        value_float,
                        largo_text,
                        text.encode('utf-8'))
+
+
+# Little endian, unsigned short, 6 char, unsigned char, unsigned char,
+# unsigned short
+HEADER_FORMAT = '<H6sBBH'
+
+
+class Header:
+    """Representación del encabezado de un paquete."""
+    packet_id: int
+    mac: bytes
+    transport_layer: int
+    protocol_id: int
+    packet_length: int
+
+    def __init__(self, header_bytes: bytes) -> None:
+        (
+            self.packet_id,
+            self.mac,
+            self.transport_layer,
+            self.protocol_id,
+            self.packet_length,
+        ) = struct.unpack(HEADER_FORMAT, header_bytes)
+
+
+class Packet:
+    """Representación de un paquete."""
+    header: Header
+    body: Datum
+    loss: int
+
+    def __init__(self, packet_bytes: bytes) -> None:
+        self.header = Header(packet_bytes[:12])
+        self.loss = self.header.packet_length - len(packet_bytes)
+        self.body = self.parse_body(packet_bytes[12:])
+
+    def parse_body(self, body_bytes: bytes):
+        """Desempaqueta el cuerpo de un paquete."""
+        # TODO: desempaquetar cuerpo
+        return Datum()
 
 
 def unpack(packet: bytes) -> list:
