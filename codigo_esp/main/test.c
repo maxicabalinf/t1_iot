@@ -115,41 +115,36 @@ void nvs_init() {
     ESP_ERROR_CHECK(ret);
 }
 
-void socket_tcp() {
+void socket_tcp(char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock < 0) {
-        ESP_LOGE(TAG, "Error al crear el socket");
-        return;
-    }
+    while(1){
+        int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (sock < 0) {
+            ESP_LOGE(TAG, "Error al crear el socket");
+            break;
+        }
 
-    // Conectar al servidor
-    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
-        ESP_LOGE(TAG, "Error al conectar");
+        // Conectar al servidor
+        if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
+            ESP_LOGE(TAG, "Error al conectar");
+            close(sock);
+            break;
+        }
+
+        // Enviar mensaje
+        send(sock, msg, size, 0);
+        free(msg);
+        ESP_LOGI(TAG, "Mensaje enviado con éxito");
+        vTaskDelay(60000 / portTICK_PERIOD_MS);
+        shutdown(sock, 0);
+        // Cerrar el socket
         close(sock);
-        return;
     }
-
-    // Enviar mensaje "Hola Mundo"
-    send(sock, "hola mundo", strlen("hola mundo"), 0);
-
-    // Recibir respuesta
-
-    char rx_buffer[128];
-    int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-    if (rx_len < 0) {
-        ESP_LOGE(TAG, "Error al recibir datos");
-        return;
-    }
-    ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
-
-    // Cerrar el socket
-    close(sock);
 }
 //--------------------------------------------------------------------//
 // Empaquetado de datos
@@ -354,9 +349,9 @@ char* get_message(char t_l, char protocol) {
     return msg;
 }
 void app_main(void) {
-    // nvs_init();
-    // wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-    // ESP_LOGI(TAG, "Conectado a WiFi!\n");
+    nvs_init();
+    wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+    ESP_LOGI(TAG, "Conectado a WiFi!\n");
     // socket_tcp();
 
     char* message = get_message(0,1);
@@ -385,9 +380,10 @@ void app_main(void) {
         int len = recv(sock_inicial,configuration,2,0);
         char transport_layer = configuration[0];
         char protocolo = configuration[1];
+        char* message = get_message(transport_layer,protocolo);
         free(configuration);
         if(transport_layer == 0){ //si es TCP
-            //hago funcion que envie TCP
+            socket_tcp(message, sizeof(message)); // falta ver una forma de ver el tamaño del protocolo
         }
         if (transport_layer == 1){
            //hago funcion que envie udp
