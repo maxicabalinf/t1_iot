@@ -48,6 +48,7 @@ class LogEntry(BaseModel):
     """BaseModelo de datos para los logs."""
     device_id = ForeignKeyField(Device, field='id')
     transport_layer_id = ForeignKeyField(TransportLayer, field='id')
+    body_protocol_id = IntegerField()
     timestamp = TimestampField()
 
     class Meta:
@@ -131,10 +132,11 @@ def initialize_tables(database):
         ], safe=True)
 
         # Llena con valores iniciales
-        TransportLayer.create(id=0, name='TCP')
-        TransportLayer.create(id=1, name='UDP')
+        TransportLayer.create(id=TransportLayerValue.TCP, name='TCP')
+        TransportLayer.create(id=TransportLayerValue.UDP, name='UDP')
 
-        Configuration.create(body_protocol_id=0, transport_layer_id=0)
+        Configuration.create(body_protocol_id=0,
+                             transport_layer_id=TransportLayerValue.TCP)
 
 
 # Crea y llena tablas si no existen
