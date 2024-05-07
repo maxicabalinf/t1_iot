@@ -22,12 +22,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 """
 
 import socket
+import struct
 import threading
 from modelos import Configuration, TransportLayerValue
 from packet_parser import get_packet_size
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
-PORT = 1234       # Puerto en el que se escucha
+PORT_TCP = 1234       # Puerto en el que se escucha
 
 
 def get_cfg():
@@ -103,10 +104,10 @@ if __name__ == '__main__':
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to the host and port
-        server.bind((HOST, PORT))
+        server.bind((HOST, PORT_TCP))
         # listen for incoming connections
         server.listen()
-        print(f"Listening on {HOST}:{PORT}")
+        print(f"Listening on {HOST}:{PORT_TCP}")
 
         while True:
             # accept a client connection
@@ -115,6 +116,9 @@ if __name__ == '__main__':
 
             # # Consultar la tabla de configuración en la base de datos
             cfg = get_cfg()
+            respuesta = struct.pack('BB', cfg['transport_layer_id'], cfg['body_protocol_id'])
+            client_socket.sendall(respuesta)
+            
             # TODO: enviar headers con configuración
 
             # Abre conexión con protocolo correspondiente
