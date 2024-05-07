@@ -144,6 +144,7 @@ void socket_tcp(char* msg, int size) {
         shutdown(sock, 0);
         // Cerrar el socket
         close(sock);
+        break;
     }
 }
 //--------------------------------------------------------------------//
