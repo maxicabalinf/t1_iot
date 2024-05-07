@@ -48,6 +48,7 @@ class LogEntry(BaseModel):
     """BaseModelo de datos para los logs."""
     device_id = ForeignKeyField(Device, field='id')
     transport_layer_id = ForeignKeyField(TransportLayer, field='id')
+    body_protocol_id = IntegerField()
     timestamp = TimestampField()
 
     class Meta:
