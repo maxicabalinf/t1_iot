@@ -116,25 +116,28 @@ if __name__ == '__main__':
 
             # # Consultar la tabla de configuración en la base de datos
             cfg = get_cfg()
+            print(cfg)
             respuesta = struct.pack('BB', cfg['transport_layer_id'], cfg['body_protocol_id'])
             client_socket.sendall(respuesta)
+            print(TransportLayerValue.TCP.value, type(TransportLayerValue.TCP.value))
             
             # TODO: enviar headers con configuración
 
             # Abre conexión con protocolo correspondiente
-            if cfg['transport_layer_id'] == TransportLayerValue.TCP:
+            if cfg['transport_layer_id'] == TransportLayerValue.TCP.value:
                 # Usa nuevo socket creado
                 thread = threading.Thread(
                     target=handle_client, args=(client_socket, addr,))
                 thread.start()
-            if cfg['transport_layer_id'] == TransportLayerValue.UDP:
+                
+            if cfg['transport_layer_id'] == TransportLayerValue.UDP.value:
                 # Establece nueva conexión por UCP con cliente
                 thread = threading.Thread(
                     target=handle_client, args=(client_socket, addr,))
                 thread.start()
             else:
                 print(f'Invalid transport layer ({cfg["transport_layer_id"]})')
-
+            break
     except socket.error as e:
         print(f"Error: {e}")
     finally:

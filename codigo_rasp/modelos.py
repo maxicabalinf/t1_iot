@@ -132,11 +132,11 @@ def initialize_tables(database):
         ], safe=True)
 
         # Llena con valores iniciales
-        TransportLayer.create(id=TransportLayerValue.TCP, name='TCP')
-        TransportLayer.create(id=TransportLayerValue.UDP, name='UDP')
+        TransportLayer.create(id=TransportLayerValue.TCP.value, name='TCP')
+        TransportLayer.create(id=TransportLayerValue.UDP.value, name='UDP')
 
         Configuration.create(body_protocol_id=0,
-                             transport_layer_id=TransportLayerValue.TCP)
+                             transport_layer_id=TransportLayerValue.TCP.value)
 
 
 # Crea y llena tablas si no existen
