@@ -1,55 +1,7 @@
-"""
-
---- Packing en C ---
-
-
-
-char * pack(int packet_id, float value_float, char * text) {
-    char * packet = malloc(12 + strlen(text));
-    memcpy(packet, &packet_id, 4);
-    memcpy(packet + 4, &value_float, 4);
-    memcpy(packet + 8, &largo_text, 4);
-    memcpy(packet + 12, text, largo_text);
-    return packet;
-}
-
-//Luego mandan el paquete por el socket
-
-
---- Unpacking en C ---
-
-
-void unpack(char * packet) {
-    int packet_id;
-    float value_float;
-    int largo_text;
-    char * text;
-
-    memcpy(&packet_id, packet, 4);
-    memcpy(&value_float, packet + 4, 4);
-    memcpy(&largo_text, packet + 8, 4);
-
-    text = malloc(largo_text + 1); // +1 for the null-terminator
-    if (text == NULL) {
-        // Handle memory allocation failure
-        return;
-    }
-
-    memcpy(text, packet + 12, largo_text);
-    text[largo_text] = '\0'; // Null-terminate the string
-
-    printf("Packet ID: %d\n", packet_id);
-    printf("Float Value: %f\n", value_float);
-    printf("Text: %s\n", text);
-
-    free(text);
-}
-
-
-"""
-
+"""Funciones para procesar paquetes."""
 import struct  # Libreria muy util para codificar y decodificar datos
-from modelos import Datum
+from time import time
+from modelos import Datum, LogEntry
 
 HEADER_SIZE = 12
 THCP_SIZE = 10
@@ -75,74 +27,98 @@ def get_packet_size(body_protocol_id):
     return PROTOCOL_BODY_SIZE[body_protocol_id] + HEADER_SIZE
 
 
-def pack(packet_id: int, value_float: float, text: str) -> bytes:
-    """
-     '<' significa que se codifica en little-endian
-     'i' significa que el primer dato es un entero de 4 bytes
-     'f' significa que el segundo dato es un float de 4 bytes
-     'i' significa que el tercer dato es un entero de 4 bytes
-     '{}s'.format(largo_text) (ej: 10s para un string de largo 10) significa
-     que el string tiene largo variable,
-
-    Documentacion de struct: https://docs.python.org/3/library/struct.html
-    """
-    largo_text = len(text)
-    return struct.pack(f'<ifi{largo_text}s',
-                       packet_id,
-                       value_float,
-                       largo_text,
-                       text.encode('utf-8'))
-
-
 # Little endian, unsigned short, 6 char, unsigned char, unsigned char,
 # unsigned short
 HEADER_FORMAT = '<H6sBBH'
 
+PROTOCOL_0_BODY_FORMAT = '<B'
+PROTOCOL_1_BODY_FORMAT = PROTOCOL_0_BODY_FORMAT + 'I'
+PROTOCOL_2_BODY_FORMAT = PROTOCOL_1_BODY_FORMAT + 'BIBf'
+PROTOCOL_3_BODY_FORMAT = PROTOCOL_2_BODY_FORMAT + '7f'
+PROTOCOL_4_BODY_FORMAT = PROTOCOL_2_BODY_FORMAT + '12000f'
+PROTOCOL_BODY_FORMAT = [
+    PROTOCOL_0_BODY_FORMAT,
+    PROTOCOL_1_BODY_FORMAT,
+    PROTOCOL_2_BODY_FORMAT,
+    PROTOCOL_3_BODY_FORMAT,
+    PROTOCOL_4_BODY_FORMAT,
+]
 
-class Header:
-    """Representación del encabezado de un paquete."""
+
+def unpack_header(header_bytes: bytes, datum_obj: Datum,
+                  log_obj: LogEntry) -> tuple:
+    """Desempaqueta el cuerpo de un paquete a los modelos objetivo."""
     packet_id: int
-    mac: bytes
-    transport_layer: int
-    protocol_id: int
     packet_length: int
+    mac: bytes
+    (
+        packet_id,
+        mac,
+        log_obj.transport_layer_id,
+        log_obj.body_protocol_id,
+        packet_length,
+    ) = struct.unpack(HEADER_FORMAT, header_bytes)
+    datum_obj.device_mac = mac.hex()
 
-    def __init__(self, header_bytes: bytes) -> None:
-        (
-            self.packet_id,
-            self.mac,
-            self.transport_layer,
-            self.protocol_id,
-            self.packet_length,
-        ) = struct.unpack(HEADER_FORMAT, header_bytes)
-
-
-class Packet:
-    """Representación de un paquete."""
-    header: Header
-    body: Datum
-    loss: int
-
-    def __init__(self, packet_bytes: bytes) -> None:
-        self.header = Header(packet_bytes[:12])
-        self.loss = self.header.packet_length - len(packet_bytes)
-        self.body = self.parse_body(packet_bytes[12:])
-
-    def parse_body(self, body_bytes: bytes):
-        """Desempaqueta el cuerpo de un paquete."""
-        # TODO: desempaquetar cuerpo
-        return Datum()
+    return (packet_id, packet_length)
 
 
-def unpack(packet: bytes) -> list:
-    """Desempaqueta en [packet_id, value_float, text]"""
-    packet_id, value_float, largo_text = struct.unpack('<ifi', packet[:12])
-    text = struct.unpack(f'<{largo_text}s', packet[12:])[0] \
-        .decode('utf-8')
-    return [packet_id, value_float, text]
+def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
+    """Desempaqueta el cuerpo de un paquete."""
+    # TODO: abordar caso de pérdida
+    unpacked = struct.unpack(PROTOCOL_BODY_FORMAT[protocol_id], body_bytes)
+
+    # Estructuración de tupla desempaquetada según protocolo.
+    datum_obj.batt_level = unpacked[0]
+
+    if protocol_id == 0:
+        return
+
+    datum_obj.msg_timestamp = unpacked[1]
+
+    if protocol_id == 1:
+        return
+
+    datum_obj.temp = unpacked[2]
+    datum_obj.hum = unpacked[3]
+    datum_obj.pres = unpacked[4]
+    datum_obj.co = unpacked[5]
+
+    if protocol_id == 2:
+        return
+
+    if protocol_id == 3:
+        datum_obj.rms = unpacked[6]
+        datum_obj.amp_x = unpacked[7]
+        datum_obj.freq_x = unpacked[8]
+        datum_obj.amp_y = unpacked[9]
+        datum_obj.freq_y = unpacked[10]
+        datum_obj.amp_z = unpacked[11]
+        datum_obj.freq_z = unpacked[12]
+
+    if protocol_id == 4:
+        datum_obj.acc_x = unpacked[6]
+        datum_obj.acc_y = unpacked[7]
+        datum_obj.acc_z = unpacked[8]
+        datum_obj.rgyr_x = unpacked[9]
+        datum_obj.rgyr_y = unpacked[10]
+        datum_obj.rgyr_z = unpacked[11]
 
 
-if __name__ == "__main__":
-    mensage = pack(1, 3.20, "Hola mundo")
-    print(mensage)
-    print(unpack(mensage))
+def unpack(packet_bytes: bytes) -> Datum:
+    """Desempaqueta bytes y devuelve los modelos correspondientes."""
+    # Modelos para rellenar.
+    new_datum = Datum()
+    new_log_entry = LogEntry()
+
+    # Obtención de datos.
+    new_datum.saved_timestamp = int(time())
+    (packet_id, packet_length) = unpack_header(
+        packet_bytes[:12], new_datum, new_log_entry)
+    new_datum.packet_loss = packet_length - len(packet_bytes)
+    unpack_body(new_log_entry.body_protocol_id, packet_bytes[12:], new_datum)
+    if new_log_entry.body_protocol_id > 0:
+        new_datum.delta_time = new_datum.saved_timestamp \
+            - new_datum.msg_timestamp
+
+    return (packet_id, new_datum, new_log_entry)
