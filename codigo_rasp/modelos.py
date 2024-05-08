@@ -1,9 +1,9 @@
 """Definición de modelos de datos."""
-from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
-    TimestampField, ForeignKeyField, TimeField, FloatField, CompositeKey, \
-    BooleanField, Check, SQL
-from playhouse.postgres_ext import ArrayField
 from enum import Enum
+from playhouse.postgres_ext import ArrayField
+from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
+    TimestampField, ForeignKeyField, FloatField, CompositeKey, BooleanField, \
+    Check, SQL
 
 # Configuración de la base de datos
 db_config = {
@@ -60,7 +60,7 @@ class Datum(BaseModel):
     device_id = IntegerField()
     device_mac = TextField()
     saved_timestamp = TimestampField()
-    delta_time = TimeField()
+    delta_time = IntegerField()
     packet_loss = IntegerField()
 
     # Data fields
