@@ -123,6 +123,7 @@ void socket_tcp(char* msg, int size) {
         }
 
         // Enviar mensaje
+        ESP_LOGI(TAG, "Send message.");
         send(sock, msg, size, 0);
         free(msg);
         ESP_LOGI(TAG, "Mensaje enviado con éxito");
@@ -173,7 +174,7 @@ void copy_mac(uint8_t* source, uint8_t* target) {
 
 uint8_t msg_id = 0;
 
-char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16_t msg_length) {
+uint8_t* get_header_(uint8_t mac[6], uint8_t transport_layer, uint8_t protocol_id, uint16_t msg_length) {
     Header* header = malloc(sizeof(Header));
     header->msg_id = msg_id++;
     if (mac == NULL) {
@@ -184,7 +185,8 @@ char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16
     header->transport_layer = transport_layer;
     header->protocol_id = protocol_id;
     header->length = msg_length;
-    return (char*)header;
+    ESP_LOGI(TAG, "message size: %i", header->length);
+    return (uint8_t*)header;
 }
 
 float random_float(float min, float max) {
@@ -360,7 +362,7 @@ char* (*body_creator[])() = {
  * @param protocol_id Protocolo del cuerpo del mensaje.
  * @return char* Puntero al mensaje.
  */
-char* get_message(char transport_layer, unsigned char protocol_id) {
+char* get_message(uint8_t transport_layer, uint8_t protocol_id) {
     int body_size = PROTOCOL_BODY_SIZE[protocol_id];
     char* body_data = body_creator[protocol_id]();
     int msg_length = HEADER_SIZE + body_size;
