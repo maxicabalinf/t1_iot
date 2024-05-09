@@ -65,9 +65,51 @@ def send_headers(sock):
     pass
 
 
+def unpack_body_protocol(protocol, body):
+    print(len(body))
+    if protocol == 0:
+        data = struct.unpack('B', body)
+        return {"batt_level": data[0]}    
+    elif protocol ==1:
+        bat, time_stamp = struct.unpack('=BI', body)
+        return {"batt_level": bat, 'msg_timestamp': time_stamp}    
+    elif protocol ==2:
+        bat, time_stamp, temp, pres, hum, co = struct.unpack('=BIBIBI', body)
+        return {"batt_level": bat, 'msg_timestamp': time_stamp, "temp" : temp, "hum" : hum , "pres" : pres, "co" : co}
+    elif protocol == 3:
+        bat, time_stamp, temp, pres, hum, co, *acc_kpi = struct.unpack('=BIBIBI7f', body)
+        res= {"batt_level": bat, 'msg_timestamp': time_stamp, "temp" : temp, "hum" : hum , "pres" : pres, "co" : co}
+        res["rms"] = acc_kpi[0]
+        res["amp_x"] = acc_kpi[1]
+        res["freq_x"] = acc_kpi[2]
+        res["amp_y"] = acc_kpi[3]
+        res["freq_y"] = acc_kpi[4]
+        res["amp_z"] = acc_kpi[5]
+        res["freq_z"] = acc_kpi[6]
+        return res
+    elif protocol == 4:
+        common = body[:15]
+        sensor = body[15:]
+        bat, time_stamp, temp, pres, hum, co = struct.unpack('=BIBIBI', common)
+        res= {"batt_level": bat, 'msg_timestamp': time_stamp, "temp" : temp, "hum" : hum , "pres" : pres, "co" : co}
+        acc_sensor =  struct.unpack('12000f', sensor)
+        res['acc_x'] = acc_sensor[0:2000]
+        res['acc_y'] = acc_sensor[2000:4000]
+        res['acc_z'] = acc_sensor[4000:6000]
+        res['rgyr_x'] = acc_sensor[6000:8000]
+        res['rgyr_x'] = acc_sensor[8000:10000]
+        res['rgyr_x'] = acc_sensor[10000:12000]
+        return res
+
 def parse_msg(pkt):
     """Deconstruye el paquete."""
-    pass
+    header = pkt[:12]
+    body = pkt[12:]
+    id_msg, *mac_adress, transport_layer, protocolo, message_len = struct.unpack('H6BBBH', header)
+    body_unpack = unpack_body_protocol(protocolo, body)
+    print(body_unpack)
+
+    
 
 
 # Crear 2 sockets, TCP Y UDP
@@ -83,8 +125,9 @@ def parse_msg(pkt):
 
 # Finalmente se reinicia el ciclo.
 
-def handle_client():
-    pass
+def handle_client(client_sock, addr):
+    pkt = client_sock.recv(13000)
+    parse_msg(pkt)
 
 
 def handle_tcp_client(tcp_client: socket, config):
@@ -112,31 +155,35 @@ if __name__ == '__main__':
         while True:
             # accept a client connection
             client_socket, addr = server.accept()
+            client_socket.settimeout(10)
             print(f"Accepted connection from {addr[0]}:{addr[1]}")
 
             # # Consultar la tabla de configuración en la base de datos
             cfg = get_cfg()
-            print(cfg)
             respuesta = struct.pack('BB', cfg['transport_layer_id'], cfg['body_protocol_id'])
             client_socket.sendall(respuesta)
-            print(TransportLayerValue.TCP.value, type(TransportLayerValue.TCP.value))
             
-            # TODO: enviar headers con configuración
-
             # Abre conexión con protocolo correspondiente
             if cfg['transport_layer_id'] == TransportLayerValue.TCP.value:
-                # Usa nuevo socket creado
-                thread = threading.Thread(
-                    target=handle_client, args=(client_socket, addr,))
-                thread.start()
+                #Busca a la misma esp
+                tcp_socket, tcp_addr = server.accept()
+                if tcp_addr[0] == addr[0]:
+                    # Usa nuevo socket creado
+                    thread = threading.Thread(
+                        target=handle_client, args=(tcp_socket, tcp_addr,))
+                    thread.start()
+                else:
+                    print(f"Invalid connection. Waiting for {addr[0]} instead recv {tcp_addr[0]}")
                 
-            if cfg['transport_layer_id'] == TransportLayerValue.UDP.value:
+                        
+            elif cfg['transport_layer_id'] == TransportLayerValue.UDP.value:
                 # Establece nueva conexión por UCP con cliente
                 thread = threading.Thread(
                     target=handle_client, args=(client_socket, addr,))
                 thread.start()
             else:
                 print(f'Invalid transport layer ({cfg["transport_layer_id"]})')
+            
             break
     except socket.error as e:
         print(f"Error: {e}")
