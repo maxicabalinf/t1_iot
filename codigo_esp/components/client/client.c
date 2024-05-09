@@ -371,7 +371,7 @@ char* get_message(uint8_t transport_layer, uint8_t protocol_id) {
     int cursor = 0;
     cat_n_free_n_shift(&msg[cursor],
                        get_header_(NULL, transport_layer, protocol_id,
-                                   body_size),
+                                   msg_length),
                        HEADER_SIZE,
                        &cursor);
     cat_n_free_n_shift(&msg[cursor], body_data, body_size, &cursor);
