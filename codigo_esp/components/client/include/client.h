@@ -3,12 +3,27 @@
 #include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#include "esp_event.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "lwip/err.h"
+#include "lwip/sockets.h"  // Para sockets
+#include "lwip/sys.h"
+#include "nvs_flash.h"
 // Credenciales de WiFi
 
 #define WIFI_SSID "Julieta 2.4"
 #define WIFI_PASSWORD "chile.com"
-#define SERVER_IP "192.168.100.15"  // IP del servidor
-#define SERVER_PORT 1234
+#define SERVER_IP "192.168.100.193"  // IP del servidor
+#define SERVER_PORT_TCP 1234
+#define SERVER_PORT_UDP 1235
 
 // Variables de WiFi
 #define WIFI_CONNECTED_BIT BIT0
@@ -22,7 +37,11 @@ void nvs_init();
 void socket_tcp();
 void wifi_init_sta(char* ssid, char* password);
 
-char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16_t msg_length);
+uint8_t* get_header_(uint8_t mac[6], uint8_t transport_layer, uint8_t protocol_id, uint16_t msg_length);
+void event_handler(void* arg, esp_event_base_t event_base,int32_t event_id, void* event_data);
+int get_msg_size(char protocol);
+void socket_tcp(char* msg, int size);
+void socket_udp(char*msg, int size);
 
 typedef struct {
     uint16_t msg_id;
@@ -121,4 +140,4 @@ static const int PROTOCOL_BODY_SIZE[] = {
  * @param protocol_id Protocolo del cuerpo del mensaje.
  * @return char* Puntero al mensaje.
  */
-char* get_message(char transport_layer, unsigned char protocol_id);
+char* get_message(uint8_t transport_layer, uint8_t protocol_id);

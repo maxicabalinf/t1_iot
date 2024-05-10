@@ -104,7 +104,7 @@ void nvs_init() {
 void socket_tcp(char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_port = htons(SERVER_PORT_TCP);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
@@ -123,6 +123,7 @@ void socket_tcp(char* msg, int size) {
         }
 
         // Enviar mensaje
+        ESP_LOGI(TAG, "Send message.");
         send(sock, msg, size, 0);
         free(msg);
         ESP_LOGI(TAG, "Mensaje enviado con éxito");
@@ -133,9 +134,37 @@ void socket_tcp(char* msg, int size) {
         break;
     }
 }
+void socket_udp(char*msg, int size){
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT_UDP);
+    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+
+    // Crear un socket
+    while(1){
+        int sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock < 0) {
+            ESP_LOGE(TAG, "Error al crear el socket");
+            break;
+        }
+        // Enviar mensaje
+        sendto(sock, msg, size, 0,(struct sockaddr *) &server_addr,sizeof(server_addr));
+        free(msg);
+        ESP_LOGI(TAG, "Mensaje enviado con éxito con UDP");
+        vTaskDelay(60000 / portTICK_PERIOD_MS);
+        shutdown(sock, 0);
+        // Cerrar el socket
+        close(sock);
+        break;
+    }
+}
 //--------------------------------------------------------------------//
 // Empaquetado de datos
 //--------------------------------------------------------------------//
+int get_msg_size(char protocol){
+   int size = HEADER_SIZE + (int)PROTOCOL_BODY_SIZE[(int) protocol];
+   return size;
+}
 
 void copy_mac(uint8_t* source, uint8_t* target) {
     for (int i = 0; i < 6; i++) {
@@ -145,7 +174,7 @@ void copy_mac(uint8_t* source, uint8_t* target) {
 
 uint8_t msg_id = 0;
 
-char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16_t msg_length) {
+uint8_t* get_header_(uint8_t mac[6], uint8_t transport_layer, uint8_t protocol_id, uint16_t msg_length) {
     Header* header = malloc(sizeof(Header));
     header->msg_id = msg_id++;
     if (mac == NULL) {
@@ -156,7 +185,8 @@ char* get_header_(uint8_t mac[6], char transport_layer, char protocol_id, uint16
     header->transport_layer = transport_layer;
     header->protocol_id = protocol_id;
     header->length = msg_length;
-    return (char*)header;
+    ESP_LOGI(TAG, "message size: %i", header->length);
+    return (uint8_t*)header;
 }
 
 float random_float(float min, float max) {
@@ -332,7 +362,7 @@ char* (*body_creator[])() = {
  * @param protocol_id Protocolo del cuerpo del mensaje.
  * @return char* Puntero al mensaje.
  */
-char* get_message(char transport_layer, unsigned char protocol_id) {
+char* get_message(uint8_t transport_layer, uint8_t protocol_id) {
     int body_size = PROTOCOL_BODY_SIZE[protocol_id];
     char* body_data = body_creator[protocol_id]();
     int msg_length = HEADER_SIZE + body_size;
@@ -341,7 +371,7 @@ char* get_message(char transport_layer, unsigned char protocol_id) {
     int cursor = 0;
     cat_n_free_n_shift(&msg[cursor],
                        get_header_(NULL, transport_layer, protocol_id,
-                                   body_size),
+                                   msg_length),
                        HEADER_SIZE,
                        &cursor);
     cat_n_free_n_shift(&msg[cursor], body_data, body_size, &cursor);

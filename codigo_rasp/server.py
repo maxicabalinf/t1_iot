@@ -22,12 +22,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 """
 
 import socket
+import struct
 import threading
 from modelos import Configuration, TransportLayerValue, Datum, LogEntry, Header
 from packet_parser import get_packet_size, unpack
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
-PORT = 1234       # Puerto en el que se escucha
+PORT_TCP = 1234       # Puerto en el que se escucha
 
 
 def get_cfg():
@@ -66,7 +67,6 @@ def send_headers(sock):
 
 def parse_msg(pkt):
     """Deconstruye el paquete."""
-    pass
 
 
 # Crear 2 sockets, TCP Y UDP
@@ -82,7 +82,9 @@ def parse_msg(pkt):
 
 # Finalmente se reinicia el ciclo.
 
-def handle_client():
+def handle_client(client_sock, addr):
+    # pkt = client_sock.recv(13000)
+    # parse_msg(pkt)
     pass
 
 
@@ -108,27 +110,36 @@ if __name__ == '__main__':
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to the host and port
-        server.bind((HOST, PORT))
+        server.bind((HOST, PORT_TCP))
         # listen for incoming connections
         server.listen()
-        print(f"Listening on {HOST}:{PORT}")
+        print(f"Listening on {HOST}:{PORT_TCP}")
 
         while True:
             # accept a client connection
             client_socket, addr = server.accept()
+            client_socket.settimeout(10)
             print(f"Accepted connection from {addr[0]}:{addr[1]}")
 
             # # Consultar la tabla de configuración en la base de datos
             cfg = get_cfg()
-            # TODO: enviar headers con configuración
+            respuesta = struct.pack(
+                'BB', cfg['transport_layer_id'], cfg['body_protocol_id'])
+            client_socket.sendall(respuesta)
 
             # Abre conexión con protocolo correspondiente
             if cfg['transport_layer_id'] == TransportLayerValue.TCP:
-                # Usa nuevo socket creado
-                thread = threading.Thread(
-                    target=handle_client, args=(client_socket, addr,))
-                thread.start()
-            if cfg['transport_layer_id'] == TransportLayerValue.UDP:
+                # Busca a la misma esp.
+                tcp_socket, tcp_addr = server.accept()
+                if tcp_addr[0] == addr[0]:
+                    # Usa nuevo socket creado
+                    thread = threading.Thread(
+                        target=handle_client, args=(tcp_socket, tcp_addr,))
+                    thread.start()
+                else:
+                    print(f"Invalid connection. Waiting for {addr[0]} instead recv {tcp_addr[0]}")
+
+            elif cfg['transport_layer_id'] == TransportLayerValue.UDP:
                 # Establece nueva conexión por UCP con cliente
                 thread = threading.Thread(
                     target=handle_client, args=(client_socket, addr,))
@@ -136,6 +147,7 @@ if __name__ == '__main__':
             else:
                 print(f'Invalid transport layer ({cfg["transport_layer_id"]})')
 
+            break
     except socket.error as e:
         print(f"Error: {e}")
     finally:
