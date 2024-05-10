@@ -1,5 +1,5 @@
 """Definición de modelos de datos."""
-from enum import Enum
+from enum import IntEnum
 from playhouse.postgres_ext import ArrayField
 from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
     TimestampField, ForeignKeyField, FloatField, CompositeKey, BooleanField, \
@@ -16,7 +16,7 @@ db_config = {
 db = PostgresqlDatabase(**db_config)
 
 
-class TransportLayerValue(Enum):
+class TransportLayerValue(IntEnum):
     """Enumeración de tipos de capa de transporte."""
     TCP = 0
     UDP = 1
