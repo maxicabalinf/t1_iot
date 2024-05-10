@@ -23,8 +23,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
 import socket
 import threading
-from modelos import Configuration, TransportLayerValue
-from packet_parser import get_packet_size
+from modelos import Configuration, TransportLayerValue, Datum, LogEntry, Header
+from packet_parser import get_packet_size, unpack
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
@@ -86,14 +86,19 @@ def handle_client():
     pass
 
 
-def handle_tcp_client(tcp_client: socket, config):
+def handle_tcp_client(tcp_client: socket.socket, config):
     """Ejecuta el procedimiento de almacenado para un cliente TCP."""
     protocol_id = config['body_protocol_id']
     pckt = tcp_client.recv(get_packet_size(protocol_id))
-    # TODO: parsear paquete
-    # TODO: almacenar mensaje (Datum)
-    # TODO: escribir logs (Log)
-    # TODO: escribir loss
+    header: Header
+    new_datum: Datum
+    new_log_entry: LogEntry
+
+    (header, new_datum, new_log_entry) = unpack(pckt)
+
+    new_log_entry.transport_layer_id = header.transport_layer_id
+    new_datum.save()
+    new_log_entry.save()
 
 
 if __name__ == '__main__':
