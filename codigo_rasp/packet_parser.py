@@ -80,8 +80,8 @@ def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
         return
 
     datum_obj.temp = unpacked[2]
-    datum_obj.hum = unpacked[3]
-    datum_obj.pres = unpacked[4]
+    datum_obj.pres = unpacked[3]
+    datum_obj.hum = unpacked[4]
     datum_obj.co = unpacked[5]
 
     if protocol_id == 2:

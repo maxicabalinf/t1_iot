@@ -69,8 +69,8 @@ class Datum(BaseModel):
 
     # THCP fields
     temp = IntegerField(null=True)
-    hum = IntegerField(null=True)
     pres = IntegerField(null=True)
+    hum = IntegerField(null=True)
     co = FloatField(null=True)
 
     # accelerometer_kpi fields
