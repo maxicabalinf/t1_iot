@@ -60,35 +60,35 @@ class Datum(BaseModel):
     device_id = IntegerField()
     device_mac = TextField()
     saved_timestamp = TimestampField()
-    delta_time = IntegerField()
+    delta_time = IntegerField(null=True)
     packet_loss = IntegerField()
 
     # Data fields
     batt_level = IntegerField()
-    msg_timestamp = TimestampField()
+    msg_timestamp = TimestampField(null=True)
 
     # THCP fields
-    temp = IntegerField()
-    hum = IntegerField()
-    pres = IntegerField()
-    co = FloatField()
+    temp = IntegerField(null=True)
+    hum = IntegerField(null=True)
+    pres = IntegerField(null=True)
+    co = FloatField(null=True)
 
     # accelerometer_kpi fields
-    rms = FloatField()
-    amp_x = FloatField()
-    freq_x = FloatField()
-    amp_y = FloatField()
-    freq_y = FloatField()
-    amp_z = FloatField()
-    freq_z = FloatField()
+    rms = FloatField(null=True)
+    amp_x = FloatField(null=True)
+    freq_x = FloatField(null=True)
+    amp_y = FloatField(null=True)
+    freq_y = FloatField(null=True)
+    amp_z = FloatField(null=True)
+    freq_z = FloatField(null=True)
 
     # accelerometer_sensor fields
-    acc_x = ArrayField(FloatField)
-    acc_y = ArrayField(FloatField)
-    acc_z = ArrayField(FloatField)
-    rgyr_x = ArrayField(FloatField)
-    rgyr_y = ArrayField(FloatField)
-    rgyr_z = ArrayField(FloatField)
+    acc_x = ArrayField(FloatField, null=True)
+    acc_y = ArrayField(FloatField, null=True)
+    acc_z = ArrayField(FloatField, null=True)
+    rgyr_x = ArrayField(FloatField, null=True)
+    rgyr_y = ArrayField(FloatField, null=True)
+    rgyr_z = ArrayField(FloatField, null=True)
 
     class Meta:
         primary_key = CompositeKey('device_id', 'saved_timestamp')
