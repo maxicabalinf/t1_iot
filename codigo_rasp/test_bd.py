@@ -110,6 +110,6 @@ def test_header_building():
         b'\xab\xc8\x39\xbf\x87\x9d' +  # mac
         b'\x01' +  # Transport layer
         b'\x04' +  # ID protocol
-        b'\x00\x07'
+        b'\x07\x00'
     )
     assert bytes_res == expected
