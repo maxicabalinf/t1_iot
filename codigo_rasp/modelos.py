@@ -1,4 +1,5 @@
 """Definición de modelos de datos."""
+from dataclasses import dataclass
 from enum import IntEnum
 from playhouse.postgres_ext import ArrayField
 from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
@@ -141,3 +142,13 @@ def initialize_tables(database):
 
 # Crea y llena tablas si no existen
 initialize_tables(db)
+
+
+@dataclass
+class Header:
+    """Representación de un encabezado."""
+    packet_id: int
+    mac: bytes
+    transport_layer_id: int
+    body_protocol_id: int
+    packet_length: int

@@ -1,8 +1,7 @@
 """Funciones para procesar paquetes."""
-from dataclasses import dataclass
 import struct  # Libreria muy util para codificar y decodificar datos
 from time import time
-from modelos import Datum, LogEntry, Device
+from modelos import Datum, LogEntry, Device, Header
 
 HEADER_SIZE = 12
 THCP_SIZE = 10
@@ -44,16 +43,6 @@ PROTOCOL_BODY_FORMAT = [
     PROTOCOL_3_BODY_FORMAT,
     PROTOCOL_4_BODY_FORMAT,
 ]
-
-
-@dataclass
-class Header:
-    """Representación de un encabezado."""
-    packet_id: int
-    mac: bytes
-    transport_layer_id: int
-    body_protocol_id: int
-    packet_length: int
 
 
 def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
