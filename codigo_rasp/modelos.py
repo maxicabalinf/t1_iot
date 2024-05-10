@@ -3,7 +3,7 @@ from enum import IntEnum
 from playhouse.postgres_ext import ArrayField
 from peewee import Model, PostgresqlDatabase, IntegerField, TextField, \
     TimestampField, ForeignKeyField, FloatField, CompositeKey, BooleanField, \
-    Check, SQL
+    Check, SQL, AutoField
 
 # Configuración de la base de datos
 db_config = {
@@ -37,7 +37,7 @@ class TransportLayer(BaseModel):
 
 class Device(BaseModel):
     """Representación de un dispositivo."""
-    id = IntegerField(primary_key=True)
+    id = AutoField()
     mac = TextField()
 
     class Meta:
