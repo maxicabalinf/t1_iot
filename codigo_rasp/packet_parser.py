@@ -1,7 +1,8 @@
 """Funciones para procesar paquetes."""
+from dataclasses import dataclass
 import struct  # Libreria muy util para codificar y decodificar datos
 from time import time
-from modelos import Datum, LogEntry
+from modelos import Datum, LogEntry, Device
 
 HEADER_SIZE = 12
 THCP_SIZE = 10
@@ -45,28 +46,23 @@ PROTOCOL_BODY_FORMAT = [
 ]
 
 
-def unpack_header(header_bytes: bytes, datum_obj: Datum,
-                  log_obj: LogEntry) -> tuple:
-    """Desempaqueta el cuerpo de un paquete a los modelos objetivo."""
+@dataclass
+class Header:
+    """Representación de un encabezado."""
     packet_id: int
-    packet_length: int
     mac: bytes
-    (
-        packet_id,
-        mac,
-        log_obj.transport_layer_id,
-        log_obj.body_protocol_id,
-        packet_length,
-    ) = struct.unpack(HEADER_FORMAT, header_bytes)
-    datum_obj.device_mac = mac.hex()
-
-    return (packet_id, packet_length)
+    transport_layer_id: int
+    body_protocol_id: int
+    packet_length: int
 
 
 def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
-    """Desempaqueta el cuerpo de un paquete."""
+    """Desempaqueta el cuerpo de un paquete a una instancia del modelo
+    Datum.
+    """
     # TODO: abordar caso de pérdida
     unpacked = struct.unpack(PROTOCOL_BODY_FORMAT[protocol_id], body_bytes)
+    print(unpacked)
 
     # Estructuración de tupla desempaquetada según protocolo.
     datum_obj.batt_level = unpacked[0]
@@ -105,20 +101,35 @@ def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
         datum_obj.rgyr_z = unpacked[11]
 
 
-def unpack(packet_bytes: bytes) -> Datum:
+def unpack(packet_bytes: bytes) -> tuple[Header, Datum, LogEntry]:
     """Desempaqueta bytes y devuelve los modelos correspondientes."""
     # Modelos para rellenar.
     new_datum = Datum()
     new_log_entry = LogEntry()
 
     # Obtención de datos.
-    new_datum.saved_timestamp = int(time())
-    (packet_id, packet_length) = unpack_header(
-        packet_bytes[:12], new_datum, new_log_entry)
-    new_datum.packet_loss = packet_length - len(packet_bytes)
-    unpack_body(new_log_entry.body_protocol_id, packet_bytes[12:], new_datum)
-    if new_log_entry.body_protocol_id > 0:
+    timestamp = int(time())
+    header = Header(*struct.unpack(HEADER_FORMAT, packet_bytes[:12]))
+
+    # TODO: obtener device_id
+    device: Device = Device.get_or_create(mac=header.mac.hex())[0]
+    device_id = device.id
+
+    # Valores de la nueva entrada del log.
+    new_log_entry.device_id = device_id
+    new_log_entry.transport_layer_id = header.transport_layer_id
+    new_log_entry.body_protocol_id = header.body_protocol_id
+    new_log_entry.timestamp = timestamp
+
+    # Valores para nuevo dato.
+    unpack_body(header.body_protocol_id, packet_bytes[12:], new_datum)
+    # Valores que no son del cuerpo del mensaje.
+    new_datum.device_id = device_id
+    new_datum.device_mac = header.mac.hex()
+    new_datum.saved_timestamp = timestamp
+    if header.body_protocol_id > 0:
         new_datum.delta_time = new_datum.saved_timestamp \
             - new_datum.msg_timestamp
+    new_datum.packet_loss = header.packet_length - len(packet_bytes)
 
-    return (packet_id, new_datum, new_log_entry)
+    return (header, new_datum, new_log_entry)
