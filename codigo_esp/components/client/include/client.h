@@ -21,7 +21,7 @@
 
 #define WIFI_SSID "Julieta 2.4"
 #define WIFI_PASSWORD "chile.com"
-#define SERVER_IP "192.168.100.193"  // IP del servidor
+#define SERVER_IP "192.168.100.36"  // IP del servidor
 #define SERVER_PORT_TCP 1234
 #define SERVER_PORT_UDP 1235
 
@@ -57,7 +57,7 @@ typedef struct {
     int8_t temp;
     uint32_t press;
     uint8_t hum;
-    uint32_t co;
+    float co;
 } THCP;
 
 #define THCP_SIZE 10
