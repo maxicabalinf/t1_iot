@@ -29,6 +29,7 @@ from packet_parser import get_packet_size, unpack
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT_TCP = 1234       # Puerto en el que se escucha
+PORT_UDP = 1235
 
 
 def get_cfg():
@@ -101,6 +102,38 @@ def handle_tcp_client(tcp_client: socket.socket, config):
     new_log_entry.transport_layer_id = header.transport_layer_id
     new_datum.save(force_insert=True)
     new_log_entry.save(force_insert=True)
+    
+def handle_udp_client(udp_client: socket.socket, config):
+    """Ejecuta el procedimiento de almacenado para un cliente UDP."""
+    protocol_id = config['body_protocol_id']
+    trasport_layer = config["transport_layer_id"]
+    addresses = set()
+    
+    #Espero datos hasta que cambie la TL o el Protocolo
+    while trasport_layer == config["transport_layer_id"] and protocol_id == config['body_protocol_id']:
+        
+        pckt, address = udp_client.recvfrom(get_packet_size(protocol_id))
+        addresses.add(address)
+        print('recv')
+        header: Header
+        new_datum: Datum
+        new_log_entry: LogEntry
+
+        (header, new_datum, new_log_entry) = unpack(pckt)
+
+        new_log_entry.transport_layer_id = header.transport_layer_id
+        new_datum.save(force_insert=True)
+        new_log_entry.save(force_insert=True)
+        cfg = get_cfg()
+        protocol_id = cfg['body_protocol_id']
+        trasport_layer = cfg["transport_layer_id"]
+        #Mando los datos para que la esp salga del loop
+        respuesta = struct.pack('BB', trasport_layer, protocol_id)
+        udp_client.sendto(respuesta, address)
+    #Para detener el envio en todas las esp
+    for address in addresses:
+        udp_client.sendto(respuesta,address)
+        
 
 
 if __name__ == '__main__':
@@ -131,6 +164,7 @@ if __name__ == '__main__':
             if cfg['transport_layer_id'] == TransportLayerValue.TCP:
                 # Busca a la misma esp.
                 tcp_socket, tcp_addr = server.accept()
+                tcp_socket.settimeout(10)
                 if tcp_addr[0] == addr[0]:
                     # Usa nuevo socket creado
                     thread = threading.Thread(
@@ -141,13 +175,19 @@ if __name__ == '__main__':
 
             elif cfg['transport_layer_id'] == TransportLayerValue.UDP:
                 # Establece nueva conexión por UCP con cliente
+                #abro un socket udp
+                server_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                server_udp.bind((HOST, PORT_UDP))
+                #Agrego un timeout
+                server_udp.settimeout(10)
+                print(f"Listening on {HOST}:{PORT_UDP}")
                 thread = threading.Thread(
-                    target=handle_client, args=(client_socket, addr,))
+                    target=handle_udp_client, args=(server_udp, cfg,))
                 thread.start()
             else:
                 print(f'Invalid transport layer ({cfg["transport_layer_id"]})')
 
-            break
+            
     except socket.error as e:
         print(f"Error: {e}")
     finally:
