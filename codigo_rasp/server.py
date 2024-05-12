@@ -134,7 +134,7 @@ if __name__ == '__main__':
                 if tcp_addr[0] == addr[0]:
                     # Usa nuevo socket creado
                     thread = threading.Thread(
-                        target=handle_client, args=(tcp_socket, tcp_addr,))
+                        target=handle_tcp_client, args=(tcp_socket, cfg,))
                     thread.start()
                 else:
                     print(f"Invalid connection. Waiting for {addr[0]} instead recv {tcp_addr[0]}")
