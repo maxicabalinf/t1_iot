@@ -141,20 +141,20 @@ Configuration get_configuration(int server_socket) {
     return (Configuration){configuration[0], configuration[1]};
 }
 
-void socket_udp(char* msg, int size) {
+void socket_udp(int server_sock, char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_UDP);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+    enum TransportLayer trasnport_layer = UDP;
 
-    while (1) {
-        // Crea un socket
-        int sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sock < 0) {
-            ESP_LOGE(TAG, "Error al crear el socket");
-            break;
-        }
-
+    // Crea un socket
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "Error al crear el socket");
+        break;
+    }
+    while (trasnport_layer == UDP) {
         // Envia mensaje
         int err = sendto(sock, msg, size, 0, (struct sockaddr*)&server_addr,
                          sizeof(server_addr));
@@ -163,13 +163,14 @@ void socket_udp(char* msg, int size) {
             break;
         }
         ESP_LOGI(TAG, "Mensaje enviado con éxito con UDP");
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
-        shutdown(sock, 0);
 
-        // Cierra el socket
-        close(sock);
-        break;
+        // Recibe configuracion
+        Configuration cfg = get_configuration();
+        trasnport_layer = cfg.transport_layer_id;
     }
+    vTaskDelay(60000 / portTICK_PERIOD_MS);
+    shutdown(sock, 0);
+    close(sock);
 }
 //--------------------------------------------------------------------//
 // Empaquetado de datos
