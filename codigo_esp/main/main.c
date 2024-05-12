@@ -30,16 +30,16 @@ void app_main(void) {
             int len = recv(sock_inicial, configuration, 2, 0);
             char transport_layer = configuration[0];
             char protocolo = configuration[1];
-            ESP_LOGI(TAG, "transport layer: %i y protocolo: %i", (int) transport_layer, (int) protocolo);
+            ESP_LOGI(TAG, "transport layer: %i y protocolo: %i", (int)transport_layer, (int)protocolo);
             char* message = get_message(transport_layer, protocolo);
             free(configuration);
-            if (transport_layer == 0) {                // si es TCP
+            if (transport_layer == 0) {                        // si es TCP
                 socket_tcp(message, get_msg_size(protocolo));  // falta ver una forma de ver el tamaño del protocolo
                 free(message);
             }
             if (transport_layer == 1) {
                 // hago funcion que envie udp
-                socket_udp(message,get_msg_size(protocolo));
+                socket_udp(message, get_msg_size(protocolo));
                 free(message);
             }
             // Reiniciamos el ciclo

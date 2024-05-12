@@ -134,21 +134,21 @@ void socket_tcp(char* msg, int size) {
         break;
     }
 }
-void socket_udp(char*msg, int size){
+void socket_udp(char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_UDP);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
-    while(1){
+    while (1) {
         int sock = socket(AF_INET, SOCK_DGRAM, 0);
         if (sock < 0) {
             ESP_LOGE(TAG, "Error al crear el socket");
             break;
         }
         // Enviar mensaje
-        sendto(sock, msg, size, 0,(struct sockaddr *) &server_addr,sizeof(server_addr));
+        sendto(sock, msg, size, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
         free(msg);
         ESP_LOGI(TAG, "Mensaje enviado con éxito con UDP");
         vTaskDelay(60000 / portTICK_PERIOD_MS);
@@ -161,9 +161,9 @@ void socket_udp(char*msg, int size){
 //--------------------------------------------------------------------//
 // Empaquetado de datos
 //--------------------------------------------------------------------//
-int get_msg_size(char protocol){
-   int size = HEADER_SIZE + (int)PROTOCOL_BODY_SIZE[(int) protocol];
-   return size;
+int get_msg_size(char protocol) {
+    int size = HEADER_SIZE + (int)PROTOCOL_BODY_SIZE[(int)protocol];
+    return size;
 }
 
 void copy_mac(uint8_t* source, uint8_t* target) {
