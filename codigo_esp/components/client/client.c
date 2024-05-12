@@ -200,6 +200,10 @@ float random_float(float min, float max) {
     return min + (float)rand() / ((float)RAND_MAX / (max - min));
 }
 
+int random_int(int min, int max) {
+    return min + rand() % (max - min + 1);
+}
+
 char* get_acceloremeter_kpi() {
     AccelerometerKPI* kpi = malloc(sizeof(AccelerometerKPI));
     kpi->amp_x = random_float(0.0059, 0.12);  // ampx
@@ -218,9 +222,9 @@ char* get_acceloremeter_kpi() {
 
 char* get_thpc_data() {
     THCP thcp;
-    thcp.temp = (char)5 + (rand() % 26);  // temperatura 1 byte
-    thcp.press = 1000 + (rand() % 201);   // presion 4 bytes
-    thcp.hum = random_float(30.0, 80.0);  // humedad 1 byte
+    thcp.temp = (uint8_t) random_int(5, 30);  // temperatura 1 byte
+    thcp.press = (uint32_t) random_int(1000, 1200);   // presion 4 bytes
+    thcp.hum = (uint8_t) random_int(30, 80);  // humedad 1 byte
     thcp.co = random_float(30.0, 200.0);  // co 4 bytes
 
     char* data_thpc = malloc(THCP_SIZE);
@@ -238,7 +242,7 @@ uint8_t get_batt_level() {
 
 uint32_t get_timestamp() {
     time_t t = time(NULL);  // preguntarrrrr
-    return t;
+    return (uint32_t) t;
 }
 
 /**
