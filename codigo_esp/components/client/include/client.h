@@ -1,9 +1,7 @@
 #pragma once
 
-#include <stdint.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +11,8 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"  // Para sockets
 #include "lwip/sys.h"
@@ -32,13 +32,13 @@ static const char* TAG = "WIFI";
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
 
-//WIFI
+// WIFI
 void nvs_init();
 void socket_tcp();
 void wifi_init_sta(char* ssid, char* password);
 
 uint8_t* get_header_(uint8_t mac[6], uint8_t transport_layer, uint8_t protocol_id, uint16_t msg_length);
-void event_handler(void* arg, esp_event_base_t event_base,int32_t event_id, void* event_data);
+void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 int get_msg_size(char protocol);
 void socket_tcp(char* msg, int size);
 void socket_udp(char*msg, int size);
