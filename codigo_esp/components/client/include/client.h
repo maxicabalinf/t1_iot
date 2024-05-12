@@ -151,3 +151,11 @@ static const int PROTOCOL_BODY_SIZE[] = {
  * @return char* Puntero al mensaje.
  */
 char* get_message(uint8_t transport_layer, uint8_t protocol_id);
+
+/**
+ * @brief Devuelve la configuración del servidor. Asume que recibe únicamente
+ * dos bytes.
+ *
+ * @return Configuration
+ */
+Configuration get_configuration();
