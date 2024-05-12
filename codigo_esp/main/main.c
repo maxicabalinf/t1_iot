@@ -25,18 +25,15 @@ void app_main(void) {
         close(sock_inicial);
         return;
     }
-    char* configuration = malloc(2);
-    int len = recv(sock_inicial, configuration, 2, 0);
-    char transport_layer = configuration[0];
-    char protocolo = configuration[1];
-    ESP_LOGI(TAG, "transport layer: %i y protocolo: %i", (int)transport_layer, (int)protocolo);
-    char* message = get_message(transport_layer, protocolo);
-    free(configuration);
-    if (transport_layer == 0) {                        // si es TCP
-        socket_tcp(message, get_msg_size(protocolo));  // falta ver una forma de ver el tamaño del protocolo
+    Configuration cfg = get_configuration(sock_inicial);
+
+    ESP_LOGI(TAG, "transport layer: %i y protocolo: %i", (int)cfg.transport_layer_id, (int)cfg.protocol_id);
+    char* message = get_message(cfg.transport_layer_id, cfg.protocol_id);
+    if (cfg.transport_layer_id == 0) {                        // si es TCP
+        socket_tcp(message, get_msg_size(cfg.protocol_id)); 
     }
-    if (transport_layer == 1) {
+    if (cfg.transport_layer_id == 1) {
         // hago funcion que envie udp
-        socket_udp(message, get_msg_size(protocolo));
+        socket_udp(message, get_msg_size(cfg.protocol_id));
     }
 }
