@@ -31,6 +31,7 @@ HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT_TCP = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
 
+conexiones_udp = set()
 
 def get_cfg():
     """Extrae la configuración de la base de datos"""
@@ -107,13 +108,17 @@ def handle_udp_client(udp_client: socket.socket, config):
     """Ejecuta el procedimiento de almacenado para un cliente UDP."""
     protocol_id = config['body_protocol_id']
     trasport_layer = config["transport_layer_id"]
-    addresses = set()
     
     #Espero datos hasta que cambie la TL o el Protocolo
     while trasport_layer == config["transport_layer_id"] and protocol_id == config['body_protocol_id']:
         
-        pckt, address = udp_client.recvfrom(get_packet_size(protocol_id))
-        addresses.add(address)
+        try:
+            pckt, address = udp_client.recvfrom(get_packet_size(protocol_id))
+        except e:
+            print("Error al recibir udp:", e)
+            break
+        if address not in conexiones_udp:
+            continue
         print('recv')
         header: Header
         new_datum: Datum
@@ -131,8 +136,10 @@ def handle_udp_client(udp_client: socket.socket, config):
         respuesta = struct.pack('BB', trasport_layer, protocol_id)
         udp_client.sendto(respuesta, address)
     #Para detener el envio en todas las esp
-    for address in addresses:
+    for address in conexiones_udp:
         udp_client.sendto(respuesta,address)
+        conexiones_udp.remove(address)
+    print("thread cerrado")
         
 
 
@@ -176,6 +183,9 @@ if __name__ == '__main__':
             elif cfg['transport_layer_id'] == TransportLayerValue.UDP:
                 # Establece nueva conexión por UCP con cliente
                 #abro un socket udp
+                conexiones_udp.add(addr)
+                if len(conexiones_udp)>1:
+                    continue
                 server_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 server_udp.bind((HOST, PORT_UDP))
                 #Agrego un timeout
