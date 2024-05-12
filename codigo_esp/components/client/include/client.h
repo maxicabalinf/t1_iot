@@ -45,7 +45,7 @@ void socket_udp(char* msg, int size);
 
 enum TransportLayer {
     TCP = 0,
-    UDP = 1;
+    UDP = 1
 };
 
 typedef struct {
@@ -158,4 +158,4 @@ char* get_message(uint8_t transport_layer, uint8_t protocol_id);
  *
  * @return Configuration
  */
-Configuration get_configuration();
+Configuration get_configuration(int socket);

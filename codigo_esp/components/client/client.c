@@ -14,6 +14,8 @@
 #include "lwip/sockets.h"  // Para sockets
 #include "lwip/sys.h"
 #include "nvs_flash.h"
+#include "esp_sleep.h"
+
 
 void event_handler(void* arg, esp_event_base_t event_base,
                    int32_t event_id, void* event_data) {
@@ -108,31 +110,32 @@ void socket_tcp(char* msg, int size) {
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
-    while (1) {
-        int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (sock < 0) {
-            ESP_LOGE(TAG, "Error al crear el socket");
-            break;
-        }
-
-        // Conectar al servidor
-        if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
-            ESP_LOGE(TAG, "Error al conectar");
-            close(sock);
-            break;
-        }
-
-        // Enviar mensaje
-        ESP_LOGI(TAG, "Send message.");
-        send(sock, msg, size, 0);
-        free(msg);
-        ESP_LOGI(TAG, "Mensaje enviado con éxito");
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
-        shutdown(sock, 0);
-        // Cerrar el socket
-        close(sock);
-        break;
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "Error al crear el socket");
+        return;
     }
+
+    // Conectar al servidor
+    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) != 0) {
+        ESP_LOGE(TAG, "Error al conectar");
+        close(sock);
+        return;
+    }
+
+    // Enviar mensaje
+    ESP_LOGI(TAG, "Send message.");
+    send(sock, msg, size, 0);
+    free(msg);
+    // Cerrar el socket
+    close(sock);
+
+    //Gracefully shutdown wifi
+    ESP_ERROR_CHECK(esp_wifi_stop());
+
+    //Enter Deep Sleep
+    esp_sleep_enable_timer_wakeup(5 * 1000000); // 60 segundos en microsegundos CAMBIAR A 60
+    esp_deep_sleep_start();
 }
 
 Configuration get_configuration(int server_socket) {
@@ -141,7 +144,7 @@ Configuration get_configuration(int server_socket) {
     return (Configuration){configuration[0], configuration[1]};
 }
 
-void socket_udp(int server_sock, char* msg, int size) {
+void socket_udp(char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_UDP);
@@ -152,7 +155,7 @@ void socket_udp(int server_sock, char* msg, int size) {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
         ESP_LOGE(TAG, "Error al crear el socket");
-        break;
+        return;
     }
     while (trasnport_layer == UDP) {
         // Envia mensaje
@@ -160,12 +163,12 @@ void socket_udp(int server_sock, char* msg, int size) {
                          sizeof(server_addr));
         if (err < 0) {
             ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-            break;
+            return;
         }
         ESP_LOGI(TAG, "Mensaje enviado con éxito con UDP");
 
         // Recibe configuracion
-        Configuration cfg = get_configuration();
+        Configuration cfg = get_configuration(sock);
         trasnport_layer = cfg.transport_layer_id;
     }
     vTaskDelay(60000 / portTICK_PERIOD_MS);
