@@ -141,7 +141,10 @@ void socket_tcp(char* msg, int size) {
 Configuration get_configuration(int server_socket) {
     char configuration[2];
     int len = recv(server_socket, configuration, 2, 0);
-    return (Configuration){configuration[1], configuration[0]};
+    if (len < 0) {
+        return (Configuration){0,0,0};
+    }
+    return (Configuration){configuration[1], configuration[0], 1};
 }
 
 void socket_udp(char* msg, int size) {
@@ -157,6 +160,9 @@ void socket_udp(char* msg, int size) {
         ESP_LOGE(TAG, "Error al crear el socket");
         return;
     }
+    // Configurar el socket para que sea no bloqueante
+    fcntl(sock, F_SETFL, O_NONBLOCK);
+
     while (trasnport_layer == UDP) {
         // Envia mensaje
         int err = sendto(sock, msg, size, 0, (struct sockaddr*)&server_addr,
@@ -167,13 +173,16 @@ void socket_udp(char* msg, int size) {
         }
         ESP_LOGI(TAG, "Mensaje enviado con éxito con UDP");
 
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
         // Recibe configuracion
         Configuration cfg = get_configuration(sock);
-        trasnport_layer = cfg.transport_layer_id;
+        if (cfg.recv == 1) {
+            trasnport_layer = cfg.transport_layer_id;
+            //protocol = cfg.protocol_id;
+        }
     }
-    vTaskDelay(60000 / portTICK_PERIOD_MS);
-    shutdown(sock, 0);
     close(sock);
+    esp_restart();
 }
 //--------------------------------------------------------------------//
 // Empaquetado de datos

@@ -51,6 +51,7 @@ enum TransportLayer {
 typedef struct {
     uint8_t protocol_id;
     uint8_t transport_layer_id;
+    uint8_t recv;
 } Configuration;
 
 typedef struct {
