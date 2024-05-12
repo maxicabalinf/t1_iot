@@ -141,7 +141,7 @@ void socket_tcp(char* msg, int size) {
 Configuration get_configuration(int server_socket) {
     char configuration[2];
     int len = recv(server_socket, configuration, 2, 0);
-    return (Configuration){configuration[0], configuration[1]};
+    return (Configuration){configuration[1], configuration[0]};
 }
 
 void socket_udp(char* msg, int size) {
