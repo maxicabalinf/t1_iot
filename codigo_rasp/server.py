@@ -99,8 +99,8 @@ def handle_tcp_client(tcp_client: socket.socket, config):
     (header, new_datum, new_log_entry) = unpack(pckt)
 
     new_log_entry.transport_layer_id = header.transport_layer_id
-    new_datum.save()
-    new_log_entry.save()
+    new_datum.save(force_insert=True)
+    new_log_entry.save(force_insert=True)
 
 
 if __name__ == '__main__':
