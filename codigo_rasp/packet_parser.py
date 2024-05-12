@@ -51,7 +51,6 @@ def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
     """
     # TODO: abordar caso de pérdida
     unpacked = struct.unpack(PROTOCOL_BODY_FORMAT[protocol_id], body_bytes)
-    print(unpacked)
 
     # Estructuración de tupla desempaquetada según protocolo.
     datum_obj.batt_level = unpacked[0]
@@ -82,12 +81,13 @@ def unpack_body(protocol_id, body_bytes: bytes, datum_obj: Datum) -> None:
         datum_obj.freq_z = unpacked[12]
 
     if protocol_id == 4:
-        datum_obj.acc_x = unpacked[6]
-        datum_obj.acc_y = unpacked[7]
-        datum_obj.acc_z = unpacked[8]
-        datum_obj.rgyr_x = unpacked[9]
-        datum_obj.rgyr_y = unpacked[10]
-        datum_obj.rgyr_z = unpacked[11]
+        sensor_data = unpacked[6:]
+        datum_obj.acc_x = sensor_data[:2000]
+        datum_obj.acc_y = sensor_data[2000:4000]
+        datum_obj.acc_z = sensor_data[4000:6000]
+        datum_obj.rgyr_x = sensor_data[6000:8000]
+        datum_obj.rgyr_y = sensor_data[8000:10000]
+        datum_obj.rgyr_z = sensor_data[10000:]
 
 
 def unpack(packet_bytes: bytes) -> tuple[Header, Datum, LogEntry]:
