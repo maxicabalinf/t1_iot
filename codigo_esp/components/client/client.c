@@ -134,26 +134,33 @@ void socket_tcp(char* msg, int size) {
         break;
     }
 }
+
 void socket_udp(char* msg, int size) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_UDP);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
-    // Crear un socket
     while (1) {
+        // Crea un socket
         int sock = socket(AF_INET, SOCK_DGRAM, 0);
         if (sock < 0) {
             ESP_LOGE(TAG, "Error al crear el socket");
             break;
         }
-        // Enviar mensaje
-        sendto(sock, msg, size, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
-        free(msg);
+
+        // Envia mensaje
+        int err = sendto(sock, msg, size, 0, (struct sockaddr*)&server_addr,
+                         sizeof(server_addr));
+        if (err < 0) {
+            ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+            break;
+        }
         ESP_LOGI(TAG, "Mensaje enviado con éxito con UDP");
         vTaskDelay(60000 / portTICK_PERIOD_MS);
         shutdown(sock, 0);
-        // Cerrar el socket
+
+        // Cierra el socket
         close(sock);
         break;
     }
