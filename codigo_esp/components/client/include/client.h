@@ -63,13 +63,13 @@ typedef struct {
 #define THCP_SIZE 10
 
 typedef struct {
-    uint32_t rms;
-    uint32_t amp_x;
-    uint32_t freq_x;
-    uint32_t amp_y;
-    uint32_t freq_y;
-    uint32_t amp_z;
-    uint32_t freq_z;
+    float rms;
+    float amp_x;
+    float freq_x;
+    float amp_y;
+    float freq_y;
+    float amp_z;
+    float freq_z;
 } AccelerometerKPI;
 
 #define KPI_SIZE 28
