@@ -24,9 +24,10 @@ Contiene el código del servidor del proyecto escrito en Python. Define los mode
 python server.py
 ```
 
-TODO: escribir flujo
+### Flujo
 
-_Aqui deben de hacer un readme con la estrucutra y flujo basico de su arquitectura_
+![Flujo de operación](/images/flujoiot.png)
+
 
 
 ## Comandos de docker
