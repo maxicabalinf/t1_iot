@@ -1,4 +1,4 @@
-## Plantilla T1
+## Tarea 1 IOT
 
 ### Integrantes
 
