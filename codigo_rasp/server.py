@@ -115,7 +115,7 @@ def handle_tcp_client(tcp_client: socket.socket, config):
     #Aviso que recibi la data
     respuesta = struct.pack('BB', config['transport_layer_id'], config['body_protocol_id'])
     tcp_client.sendall(respuesta)
-    
+    tcp_client.close()
 def handle_udp_client(udp_client: socket.socket, config):
     """Ejecuta el procedimiento de almacenado para un cliente UDP."""
     protocol_id = config['body_protocol_id']
@@ -154,6 +154,7 @@ def handle_udp_client(udp_client: socket.socket, config):
     for address in conexiones_udp_close:
         udp_client.sendto(respuesta, address)
     print("thread cerrado")
+    udp_client.close()
         
 
 
@@ -185,6 +186,7 @@ if __name__ == '__main__':
             if cfg['transport_layer_id'] == TransportLayerValue.TCP:
                 server_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 # bind the socket to the host and port
+                server_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server_tcp.bind((HOST, PORT_TCP))
                 # listen for incoming connections
                 server_tcp.listen()
@@ -207,6 +209,8 @@ if __name__ == '__main__':
                 if len(conexiones_udp)>1:
                     continue
                 server_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                server_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
                 server_udp.bind((HOST, PORT_UDP))
                 #Agrego un timeout
                 server_udp.settimeout(10)
