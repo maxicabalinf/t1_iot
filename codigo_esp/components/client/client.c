@@ -15,6 +15,7 @@
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 #include "esp_sleep.h"
+#include "esp_random.h"
 
 
 void event_handler(void* arg, esp_event_base_t event_base,
@@ -230,11 +231,11 @@ uint8_t* get_header_(uint8_t mac[6], uint8_t transport_layer, uint8_t protocol_i
 }
 
 float random_float(float min, float max) {
-    return min + (float)rand() / ((float)RAND_MAX / (max - min));
+    return min + (float)esp_random() / ((float)UINT32_MAX / (max - min));
 }
 
 int random_int(int min, int max) {
-    return min + rand() % (max - min + 1);
+    return min + esp_random() % (max - min + 1);
 }
 
 char* get_acceloremeter_kpi() {
@@ -270,7 +271,7 @@ char* get_thpc_data() {
 }
 
 uint8_t get_batt_level() {
-    return (uint8_t)rand() % 101;
+    return (uint8_t)esp_random() % 101;
 }
 
 uint32_t get_timestamp() {
