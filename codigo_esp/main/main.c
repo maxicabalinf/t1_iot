@@ -9,7 +9,7 @@ void app_main(void) {
     // comenzamos siempre con TCP
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT_TCP);
+    server_addr.sin_port = htons(SERVER_PORT_CONEXION);
     inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket

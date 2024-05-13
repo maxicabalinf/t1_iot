@@ -28,6 +28,7 @@ from modelos import Configuration, TransportLayerValue, Datum, LogEntry, Header
 from packet_parser import get_packet_size, unpack
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
+PORT_CONEXION = 1233
 PORT_TCP = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
 
@@ -152,10 +153,10 @@ if __name__ == '__main__':
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to the host and port
-        server.bind((HOST, PORT_TCP))
+        server.bind((HOST, PORT_CONEXION))
         # listen for incoming connections
         server.listen()
-        print(f"Listening on {HOST}:{PORT_TCP}")
+        print(f"Listening on {HOST}:{PORT_CONEXION}")
 
         while True:
             # accept a client connection
@@ -171,8 +172,14 @@ if __name__ == '__main__':
 
             # Abre conexión con protocolo correspondiente
             if cfg['transport_layer_id'] == TransportLayerValue.TCP:
+                server_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                # bind the socket to the host and port
+                server_tcp.bind((HOST, PORT_TCP))
+                # listen for incoming connections
+                server_tcp.listen()
+                print(f"Listening on {HOST}:{PORT_TCP}")
                 # Busca a la misma esp.
-                tcp_socket, tcp_addr = server.accept()
+                tcp_socket, tcp_addr = server_tcp.accept()
                 tcp_socket.settimeout(10)
                 if tcp_addr[0] == addr[0]:
                     # Usa nuevo socket creado

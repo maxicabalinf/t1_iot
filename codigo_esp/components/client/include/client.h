@@ -24,6 +24,7 @@
 #define SERVER_IP "192.168.100.36"  // IP del servidor
 #define SERVER_PORT_TCP 1234
 #define SERVER_PORT_UDP 1235
+#define SERVER_PORT_CONEXION 1233
 
 // Variables de WiFi
 #define WIFI_CONNECTED_BIT BIT0
