@@ -127,6 +127,9 @@ void socket_tcp(char* msg, int size) {
     ESP_LOGI(TAG, "Send message.");
     send(sock, msg, size, 0);
     free(msg);
+
+    //Espera a recibir la configuración como ack antes de entrar en deep sleep
+    get_configuration(sock);
     // Cerrar el socket
     close(sock);
 

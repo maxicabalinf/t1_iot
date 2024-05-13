@@ -103,6 +103,9 @@ def handle_tcp_client(tcp_client: socket.socket, config):
     new_log_entry.transport_layer_id = header.transport_layer_id
     new_datum.save(force_insert=True)
     new_log_entry.save(force_insert=True)
+    #Aviso que recibi la data
+    respuesta = struct.pack('BB', config['transport_layer_id'], config['body_protocol_id'])
+    tcp_client.sendall(respuesta)
     
 def handle_udp_client(udp_client: socket.socket, config):
     """Ejecuta el procedimiento de almacenado para un cliente UDP."""
@@ -111,13 +114,12 @@ def handle_udp_client(udp_client: socket.socket, config):
     
     #Espero datos hasta que cambie la TL o el Protocolo
     while trasport_layer == config["transport_layer_id"] and protocol_id == config['body_protocol_id']:
-        
         try:
             pckt, address = udp_client.recvfrom(get_packet_size(protocol_id))
-        except e:
-            print("Error al recibir udp:", e)
+        except Exception as error:
+            print("Error al recibir udp:", error)
             break
-        if address not in conexiones_udp:
+        if address[0] not in conexiones_udp:
             continue
         print('recv')
         header: Header
@@ -183,7 +185,7 @@ if __name__ == '__main__':
             elif cfg['transport_layer_id'] == TransportLayerValue.UDP:
                 # Establece nueva conexión por UCP con cliente
                 #abro un socket udp
-                conexiones_udp.add(addr)
+                conexiones_udp.add(addr[0])
                 if len(conexiones_udp)>1:
                     continue
                 server_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
