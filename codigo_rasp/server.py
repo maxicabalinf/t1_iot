@@ -121,6 +121,8 @@ def handle_udp_client(udp_client: socket.socket, config):
     protocol_id = config['body_protocol_id']
     trasport_layer = config["transport_layer_id"]
     
+    conexiones_udp_close = set()
+    
     #Espero datos hasta que cambie la TL o el Protocolo
     while trasport_layer == config["transport_layer_id"] and protocol_id == config['body_protocol_id']:
         try:
@@ -128,8 +130,10 @@ def handle_udp_client(udp_client: socket.socket, config):
         except Exception as error:
             print("Error al recibir udp:", error)
             break
+        #Solo recibo las que me hicieron el handshake inicial
         if address[0] not in conexiones_udp:
             continue
+        conexiones_udp_close.add(address)
         print('recv')
         header: Header
         new_datum: Datum
@@ -147,9 +151,8 @@ def handle_udp_client(udp_client: socket.socket, config):
         respuesta = struct.pack('BB', trasport_layer, protocol_id)
         udp_client.sendto(respuesta, address)
     #Para detener el envio en todas las esp
-    for address in conexiones_udp:
-        udp_client.sendto(respuesta,address)
-        conexiones_udp.remove(address)
+    for address in conexiones_udp_close:
+        udp_client.sendto(respuesta, address)
     print("thread cerrado")
         
 
