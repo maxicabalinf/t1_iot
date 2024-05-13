@@ -71,6 +71,14 @@ def send_headers(sock):
 def parse_msg(pkt):
     """Deconstruye el paquete."""
 
+def recv_msg(client, len_data):
+    data= bytearray()
+    while len(data)<len_data:
+        packet = client.recv(len_data-len(data))
+        if not packet:
+            return None
+        data.extend(packet)
+    return data
 
 # Crear 2 sockets, TCP Y UDP
 # while infinito revisando la base de datos.(siempre comienza con TCP)
@@ -94,7 +102,7 @@ def handle_client(client_sock, addr):
 def handle_tcp_client(tcp_client: socket.socket, config):
     """Ejecuta el procedimiento de almacenado para un cliente TCP."""
     protocol_id = config['body_protocol_id']
-    pckt = tcp_client.recv(get_packet_size(protocol_id))
+    pckt = recv_msg(tcp_client, get_packet_size(protocol_id))
     header: Header
     new_datum: Datum
     new_log_entry: LogEntry
