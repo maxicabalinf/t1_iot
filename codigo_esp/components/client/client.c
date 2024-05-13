@@ -152,6 +152,7 @@ Configuration get_configuration(int server_socket) {
 }
 
 void socket_udp(Configuration cfg) {
+    uint8_t protocol_id = cfg.protocol_id;
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_UDP);
@@ -167,7 +168,7 @@ void socket_udp(Configuration cfg) {
     // Configurar el socket para que sea no bloqueante
     fcntl(sock, F_SETFL, O_NONBLOCK);
 
-    while (trasnport_layer == UDP) {
+    while (trasnport_layer == UDP && cfg.protocol_id == protocol_id) {
         char* msg = get_message(cfg.transport_layer_id, cfg.protocol_id);
         // Envia mensaje
         int err = sendto(sock, msg, get_msg_size(cfg.protocol_id), 0, (struct sockaddr*)&server_addr,
