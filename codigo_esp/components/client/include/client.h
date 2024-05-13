@@ -41,19 +41,21 @@ void wifi_init_sta(char* ssid, char* password);
 uint8_t* get_header_(uint8_t mac[6], uint8_t transport_layer, uint8_t protocol_id, uint16_t msg_length);
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 int get_msg_size(char protocol);
-void socket_tcp(char* msg, int size);
-void socket_udp(char* msg, int size);
-
-enum TransportLayer {
-    TCP = 0,
-    UDP = 1
-};
 
 typedef struct {
     uint8_t protocol_id;
     uint8_t transport_layer_id;
     uint8_t recv;
 } Configuration;
+
+void socket_tcp(Configuration cfg);
+void socket_udp(Configuration cfg);
+
+enum TransportLayer {
+    TCP = 0,
+    UDP = 1
+};
+
 
 typedef struct {
     uint16_t msg_id;

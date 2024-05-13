@@ -28,12 +28,11 @@ void app_main(void) {
     Configuration cfg = get_configuration(sock_inicial);
 
     ESP_LOGI(TAG, "transport layer: %i y protocolo: %i", (int)cfg.transport_layer_id, (int)cfg.protocol_id);
-    char* message = get_message(cfg.transport_layer_id, cfg.protocol_id);
     if (cfg.transport_layer_id == 0) {                        // si es TCP
-        socket_tcp(message, get_msg_size(cfg.protocol_id)); 
+        socket_tcp(cfg); 
     }
     if (cfg.transport_layer_id == 1) {
         // hago funcion que envie udp
-        socket_udp(message, get_msg_size(cfg.protocol_id));
+        socket_udp(cfg);
     }
 }

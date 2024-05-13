@@ -103,7 +103,8 @@ void nvs_init() {
     ESP_ERROR_CHECK(ret);
 }
 
-void socket_tcp(char* msg, int size) {
+void socket_tcp(Configuration cfg) {
+    char* msg = get_message(cfg.transport_layer_id, cfg.protocol_id);
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_TCP);
@@ -125,7 +126,7 @@ void socket_tcp(char* msg, int size) {
 
     // Enviar mensaje
     ESP_LOGI(TAG, "Send message.");
-    send(sock, msg, size, 0);
+    send(sock, msg, get_msg_size(cfg.protocol_id), 0);
     free(msg);
 
     //Espera a recibir la configuración como ack antes de entrar en deep sleep
@@ -150,7 +151,7 @@ Configuration get_configuration(int server_socket) {
     return (Configuration){configuration[1], configuration[0], 1};
 }
 
-void socket_udp(char* msg, int size) {
+void socket_udp(Configuration cfg) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT_UDP);
@@ -167,8 +168,9 @@ void socket_udp(char* msg, int size) {
     fcntl(sock, F_SETFL, O_NONBLOCK);
 
     while (trasnport_layer == UDP) {
+        char* msg = get_message(cfg.transport_layer_id, cfg.protocol_id);
         // Envia mensaje
-        int err = sendto(sock, msg, size, 0, (struct sockaddr*)&server_addr,
+        int err = sendto(sock, msg, get_msg_size(cfg.protocol_id), 0, (struct sockaddr*)&server_addr,
                          sizeof(server_addr));
         if (err < 0) {
             ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
@@ -181,7 +183,6 @@ void socket_udp(char* msg, int size) {
         Configuration cfg = get_configuration(sock);
         if (cfg.recv == 1) {
             trasnport_layer = cfg.transport_layer_id;
-            //protocol = cfg.protocol_id;
         }
     }
     close(sock);
